@@ -105,6 +105,18 @@ export const BalanceSchema = z.object({
   }),
   scars: z.object({ max: int, choices: int, total: int }),
   rewards: z.object({ xpPerMonsterCost: int, xpVictoryPerTier: int, xpRetreatShare: int }),
+  /** Экспедиции из нескольких глубин и элитные враги опасной тропы. */
+  expedition: z.object({
+    stages: int.min(1).max(9),
+    stageXpPerTier: int,
+    stageLight: int,
+    /** Привал на развилке: столько процентов здоровья возвращается при спуске. */
+    stageHealPercent: int,
+    /** Одиночная экспедиция: здоровье врагов в процентах (поход длиннее, а смерть навсегда). */
+    soloHpPercent: int,
+    dangerXpPerTier: int,
+    elite: z.object({ hpPercent: int, armor: int, damage: int, poison: int, regen: int }),
+  }),
   explore: z.object({ searchRadius: int, trapSpotAttr: attr, adjacent: int, maxPathCells: int, startConsumables: z.array(z.string()) }),
   partyHpScale: z.record(z.string(), z.number()),
   /** Боссы зовут подмогу и бьют сильнее — для малых партий их здоровье режется сильнее. */

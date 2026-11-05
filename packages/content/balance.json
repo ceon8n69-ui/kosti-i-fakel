@@ -932,5 +932,20 @@
   "marketMinPrice": 1,
   "marketMaxPrice": 100000,
   "marketMaxListings": 10
+ },
+ "expedition": {
+  "stages": 3,
+  "stageXpPerTier": 40,
+  "stageLight": 15,
+  "dangerXpPerTier": 30,
+  "elite": {
+   "hpPercent": 130,
+   "armor": 1,
+   "damage": 1,
+   "poison": 1,
+   "regen": 2
+  },
+  "stageHealPercent": 50,
+  "soloHpPercent": 75
  }
 }

@@ -239,8 +239,25 @@ export class MapView {
     return wall(o.x - 1, o.y) || wall(o.x + 1, o.y) ? "x" : "z";
   }
 
+  /** Новая глубина экспедиции: карта строится заново. */
+  reset(): void {
+    for (const t of this.tiles.values()) this.group.remove(t);
+    this.tiles.clear();
+    for (const g of this.objects.values()) this.group.remove(g);
+    this.objects.clear();
+    for (const g of this.foes.values()) this.group.remove(g);
+    this.foes.clear();
+  }
+
   setObject(o: VisibleObject, animate: boolean): void {
     let g = this.objects.get(o.id);
+    // Тот же id на новой карте — другой объект: пересобрать.
+    const prev = g?.userData.obj as VisibleObject | undefined;
+    if (g && prev && (prev.type !== o.type || prev.x !== o.x || prev.y !== o.y)) {
+      this.group.remove(g);
+      this.objects.delete(o.id);
+      g = undefined;
+    }
     const fresh = !g;
     if (!g) {
       g = this.buildObject(o);

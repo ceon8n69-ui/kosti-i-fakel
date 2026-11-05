@@ -17,6 +17,13 @@ export interface ExpeditionParams {
   tier: 1 | 2 | 3;
   /** Размер партии: одиночке и двоим — меньше стычек до логова. */
   partySize?: number;
+  /** Глубина экспедиции: на последней — логово, на остальных — развилка дальше. */
+  stage?: number;
+  stages?: number;
+  /** Опасная тропа: элитные вожаки, богаче сундуки. */
+  danger?: boolean;
+  /** События предыдущей глубины — не повторять. */
+  avoidEvents?: string[];
 }
 
 interface Clearing {
@@ -65,7 +72,11 @@ export function generateExpedition(params: ExpeditionParams): DungeonDefinition 
   throw new Error("expedition generation failed");
 }
 
-function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: ExpeditionParams, attempt: number): DungeonDefinition | null {
+function tryGenerate(
+  { seedHex, biome: biomeId, tier, partySize = 4, stage = 1, stages = 1, danger = false, avoidEvents = [] }: ExpeditionParams,
+  attempt: number,
+): DungeonDefinition | null {
+  const final = stage >= stages;
   const biome = biomes.find((b) => b.id === biomeId);
   if (!biome) throw new Error(`unknown biome ${biomeId}`);
   const r = new R(seedHex, attempt);
@@ -181,17 +192,40 @@ function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: Expeditio
   const ent = cl[entranceIdx]!;
   place({ id: "entrance", type: "entrance", x: ent.cx, y: ent.cy });
 
-  // 5. Логово: босс и сокровищница.
+  // 5. Цель карты: на последней глубине — логово с боссом и сокровищницей,
+  //    на остальных — развилка, которую сторожит застава.
   const goal = cl[goalIdx]!;
-  place({ id: "treasury", type: "treasury", x: goal.cx, y: goal.cy, textId: "treasury" });
-  texts.treasury = r.pick(biome.texts.treasury);
-  texts.boss = r.pick(biome.texts.boss);
   const tierDef = balance.tiers.find((t) => t.tier === tier)!;
   const cost = (kinds: string[]) => kinds.reduce((n, k) => n + (balance.monsters.find((m) => m.id === k)?.cost ?? 0), 0);
-  // Одиночке — вожак без свиты: усиленная обычная группа. С двумя и больше — настоящий босс.
-  const boss = partySize >= 2 ? [...r.pick(biome.bosses)] : [...r.pick(biome.groups)];
-  encounters.push({ id: "lair", zone: zoneOf(goal), monsters: boss, textId: "boss", boss: true });
-  let budget = tierDef.budget - cost(boss);
+  const events: EventDefinition[] = [];
+  let budget = tierDef.budget;
+  if (final) {
+    place({ id: "treasury", type: "treasury", x: goal.cx, y: goal.cy, textId: "treasury" });
+    texts.treasury = r.pick(biome.texts.treasury);
+    texts.boss = r.pick(biome.texts.boss);
+    // Одиночке — вожак без свиты: усиленная обычная группа. С двумя и больше — настоящий босс.
+    const boss = partySize >= 2 ? [...r.pick(biome.bosses)] : [...r.pick(biome.groups)];
+    encounters.push({ id: "lair", zone: zoneOf(goal), monsters: boss, textId: "boss", boss: true, ...(danger ? { elite: true } : {}) });
+    budget -= cost(boss);
+  } else {
+    const guard = [...r.pick(biome.groups)];
+    texts.gate = r.pick(biome.texts.encounter);
+    encounters.push({ id: "gate", zone: zoneOf(goal), monsters: guard, textId: "gate", boss: false, ...(danger ? { elite: true } : {}) });
+    budget -= cost(guard);
+    const others = biomes.filter((b) => b.id !== "dungeon");
+    const a = r.pick(others);
+    const b = r.pick(others.filter((x) => x.id !== a.id));
+    events.push({
+      id: "crossroads",
+      text: `Застава позади, тропа расходится. Пройдено глубин: ${stage} из ${stages}. Дальше — опаснее и богаче, но погибший герой не вернётся.`,
+      options: [
+        { id: "go", label: `Дальше: ${a.name}`.slice(0, 48), success: [{ do: "descend", biome: a.id, danger: false }], fail: [] },
+        { id: "danger", label: `☠ Опасная тропа: ${b.name}`.slice(0, 48), success: [{ do: "descend", biome: b.id, danger: true }], fail: [] },
+        { id: "leave", label: "Вернуться в город с добычей", success: [{ do: "leave" }], fail: [] },
+      ],
+    });
+    place({ id: "crossroads", type: "event", x: goal.cx, y: goal.cy, eventId: "crossroads" });
+  }
 
   // 6. Остальные поляны.
   const roles = r.shuffle([...middle]);
@@ -199,17 +233,21 @@ function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: Expeditio
   const degree = (i: number) => edges.filter(([a, b]) => a === i || b === i).length;
   const deadEnds = roles.filter((i) => degree(i) === 1 && i !== campfireIdx);
   const fightCount = Math.min(roles.length - 1, tier + (partySize >= 3 ? 1 : 0));
+  // Чем глубже, тем больше врагов в группах.
+  // Одиночке глубина не добавляет врагов в группы — только сами группы становятся элитой на опасной тропе.
+  const depth = tier + (partySize >= 2 ? stage - 1 : 0);
   const fights = roles.filter((i) => i !== campfireIdx).slice(0, fightCount);
   let enc = 0;
   for (const i of fights) {
     const group = [...r.pick(biome.groups)];
-    if (tier >= 2) group.push(r.pick(r.pick(biome.groups)));
+    if (depth >= 2) group.push(r.pick(r.pick(biome.groups)));
     while (group.length > 1 && (cost(group) > tierDef.maxPerRoom || cost(group) > budget)) group.pop();
     if (cost(group) > budget) break;
     budget -= cost(group);
     const id = `fight_${++enc}`;
     texts[id] = r.pick(biome.texts.encounter);
-    encounters.push({ id, zone: zoneOf(cl[i]!), monsters: group, textId: id, boss: false });
+    // Опасная тропа: элитный вожак в каждой второй стычке отряда (и всегда — у заставы и в логове).
+    encounters.push({ id, zone: zoneOf(cl[i]!), monsters: group, textId: id, boss: false, ...(danger && partySize >= 2 && enc % 2 === 1 ? { elite: true } : {}) });
   }
   if (campfireIdx !== undefined) {
     const spot = spotIn(cl[campfireIdx]!);
@@ -218,15 +256,16 @@ function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: Expeditio
   const chestRooms = [...deadEnds, ...fights].filter((v, k, a) => a.indexOf(v) === k).slice(0, 2 + (tier >= 2 ? 1 : 0));
   chestRooms.forEach((i, k) => {
     const spot = spotIn(cl[i]!);
-    if (spot) place({ id: `chest_${k + 1}`, type: "chest", x: spot[0], y: spot[1], loot: chestLoot(r, tier) });
+    if (spot) place({ id: `chest_${k + 1}`, type: "chest", x: spot[0], y: spot[1], loot: chestLoot(r, tier, danger) });
   });
-  // В логове — второй сундук побогаче.
+  // В логове и у заставы — сундук побогаче.
   const lairSpot = spotIn(goal);
-  if (lairSpot) place({ id: "chest_lair", type: "chest", x: lairSpot[0], y: lairSpot[1], loot: chestLoot(r, tier, true) });
+  if (lairSpot) place({ id: "chest_lair", type: "chest", x: lairSpot[0], y: lairSpot[1], loot: chestLoot(r, tier, final || danger) });
 
   // 7. События с выбором: на свободных полянах и на тропах.
-  const pool = r.shuffle(eventLibrary.filter((e) => e.biomes.includes(biome.id) || e.biomes.includes("any")));
-  const events: EventDefinition[] = [];
+  const fits = eventLibrary.filter((e) => e.biomes.includes(biome.id) || e.biomes.includes("any"));
+  const fresh = fits.filter((e) => !avoidEvents.includes(e.id));
+  const pool = r.shuffle(fresh.length >= 3 ? fresh : fits);
   const eventSpots: [number, number][] = [];
   for (const i of roles.filter((x) => !fights.includes(x))) {
     const s = spotIn(cl[i]!);
@@ -260,6 +299,7 @@ function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: Expeditio
     tutorial: false,
     biome: biome.id,
     generated: true,
+    ...(stages > 1 ? { stage, stages, danger } : {}),
     size: { w: W, h: H },
     tiles,
     objects,
@@ -270,7 +310,9 @@ function tryGenerate({ seedHex, biome: biomeId, tier, partySize = 4 }: Expeditio
     events,
     texts,
   });
-  if (!def.success) return null;
+  if (!def.success) {
+    return null;
+  }
   // Сокровищница и все объекты достижимы от входа.
   const reach = bfs(g, ent.cx, ent.cy);
   if (!objects.every((o) => reach.has(`${o.x},${o.y}`))) return null;

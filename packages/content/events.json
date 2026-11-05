@@ -160,5 +160,88 @@
         "fail": [{ "do": "damage", "amount": 2, "target": "random" }, { "do": "text", "text": "В мешке — капкан." }] },
       { "id": "rest", "label": "Перевести дух", "success": [{ "do": "heal", "amount": 3, "target": "all" }, { "do": "light", "delta": -3 }] }
     ]
+  },  {
+    "id": "hermit_hut", "biomes": ["forest", "mountains"],
+    "text": "Из трубы хижины тянется дым. Отшельник смотрит в щель двери и не спешит открывать.",
+    "options": [
+      { "id": "trade", "label": "Купить снадобье (15 золота)", "cost": { "gold": 15 }, "success": [{ "do": "gold", "amount": -15 }, { "do": "item", "itemId": "potion" }, { "do": "text", "text": "Отшельник просовывает в щель тёплый пузырёк." }] },
+      { "id": "talk", "label": "Расспросить о тропах", "check": { "attr": "SPI", "dc": 12 }, "success": [{ "do": "text", "text": "«Чудища ходят по кругу. Обойдите их по ручью»." }, { "do": "reveal", "radius": 8 }], "fail": [{ "do": "text", "text": "Дверь захлопывается. Где-то рядом завыли." }, { "do": "doom", "delta": 1 }] },
+      { "id": "leave", "label": "Не беспокоить", "success": [{ "do": "text", "text": "Дым над хижиной гаснет." }] }
+    ]
+  },
+  {
+    "id": "frozen_knight", "biomes": ["mountains", "ruins"],
+    "text": "Во льду застыл рыцарь в доспехе. Пальцы сжимают меч, глаза открыты.",
+    "options": [
+      { "id": "chip", "label": "Вырубить меч изо льда", "check": { "attr": "STR", "dc": 13 }, "success": [{ "do": "item", "itemId": "rusty_sword" }, { "do": "text", "text": "Лёд трескается, меч ваш. Рыцарь будто кивает." }], "fail": [{ "do": "damage", "amount": 3, "target": "leader" }, { "do": "text", "text": "Ледяной осколок рассекает руку." }] },
+      { "id": "pray", "label": "Помолиться за павшего", "success": [{ "do": "doom", "delta": -1 }, { "do": "xp", "amount": 15 }, { "do": "text", "text": "На душе становится легче." }] }
+    ]
+  },
+  {
+    "id": "cursed_idol", "biomes": ["ruins", "caves", "swamp"],
+    "text": "Каменный идол с рубиновыми глазами. Под ним — кости тех, кто тянулся к рубинам.",
+    "options": [
+      { "id": "pry", "label": "Выковырять рубины", "check": { "attr": "DEX", "dc": 14 }, "success": [{ "do": "gold", "amount": 45 }, { "do": "doom", "delta": 1 }, { "do": "text", "text": "Рубины в мешке. Глаза идола пусты, но взгляд остался." }], "fail": [{ "do": "spawn", "monsters": ["shade", "shade"] }] },
+      { "id": "smash", "label": "Разбить идола", "check": { "attr": "STR", "dc": 12 }, "success": [{ "do": "doom", "delta": -2 }, { "do": "text", "text": "Идол рассыпается. Воздух становится чище." }], "fail": [{ "do": "damage", "amount": 2, "target": "all" }, { "do": "text", "text": "Идол стоит. Отдача бьёт всех." }] },
+      { "id": "leave", "label": "Не трогать", "success": [{ "do": "text", "text": "Вы обходите идола по широкой дуге." }] }
+    ]
+  },
+  {
+    "id": "wolf_den", "biomes": ["forest", "mountains"],
+    "text": "В овраге — волчье логово. Волчица кормит щенков и пока вас не видит.",
+    "options": [
+      { "id": "sneak", "label": "Прокрасться мимо", "check": { "attr": "DEX", "dc": 11 }, "success": [{ "do": "xp", "amount": 10 }, { "do": "text", "text": "Ни одна ветка не хрустнула." }], "fail": [{ "do": "spawn", "monsters": ["wolf", "wolf"] }] },
+      { "id": "feed", "label": "Оставить припасы", "success": [{ "do": "light", "delta": -2 }, { "do": "ally", "name": "Волчица", "damage": 2 }, { "do": "text", "text": "Волчица долго смотрит вам вслед, а потом идёт следом." }] }
+    ]
+  },
+  {
+    "id": "drowned_bell", "biomes": ["swamp"],
+    "text": "Из трясины торчит колокол затопленной часовни. Ветер иногда тянет его язык.",
+    "options": [
+      { "id": "ring", "label": "Ударить в колокол", "success": [{ "do": "reveal", "radius": 10 }, { "do": "spawn", "monsters": ["leech_swarm", "leech_swarm"] }] },
+      { "id": "dive", "label": "Нырнуть к часовне", "check": { "attr": "STR", "dc": 13 }, "success": [{ "do": "item", "itemId": "saint_medallion" }, { "do": "text", "text": "В иле блеснул медальон святого." }], "fail": [{ "do": "poison", "amount": 2, "target": "leader" }, { "do": "text", "text": "Тина забивает горло." }] },
+      { "id": "leave", "label": "Обойти", "success": [{ "do": "text", "text": "Колокол глухо звякнул за спиной." }] }
+    ]
+  },
+  {
+    "id": "crystal_vein", "biomes": ["caves", "mountains"],
+    "text": "Стена пещеры светится голубой жилой. Кристаллы гудят, если поднести факел.",
+    "options": [
+      { "id": "mine", "label": "Отколоть кристаллы", "check": { "attr": "STR", "dc": 11 }, "success": [{ "do": "gold", "amount": 30 }, { "do": "text", "text": "Кристаллы звенят в котомке." }], "fail": [{ "do": "damage", "amount": 2, "target": "random" }, { "do": "text", "text": "Свод осыпается." }] },
+      { "id": "study", "label": "Вслушаться в гул", "check": { "attr": "INT", "dc": 12 }, "success": [{ "do": "light", "delta": 6 }, { "do": "text", "text": "Кристаллы отдают факелу своё сияние." }], "fail": [{ "do": "doom", "delta": 1 }, { "do": "text", "text": "Гул проникает в голову. Становится тревожно." }] }
+    ]
+  },
+  {
+    "id": "deserter", "biomes": ["any"],
+    "text": "У костра сидит дезертир в рваном плаще. Рука на рукояти: «Я никого не трогаю».",
+    "options": [
+      { "id": "hire", "label": "Нанять (20 золота)", "cost": { "gold": 20 }, "success": [{ "do": "gold", "amount": -20 }, { "do": "ally", "name": "Дезертир", "damage": 3 }, { "do": "text", "text": "«За такие деньги — хоть в пасть дракону»." }] },
+      { "id": "share", "label": "Поделиться огнём", "success": [{ "do": "heal", "amount": 3, "target": "all" }, { "do": "light", "delta": -2 }, { "do": "text", "text": "Дезертир рассказывает, где лежат засады." }] },
+      { "id": "leave", "label": "Пройти мимо", "success": [{ "do": "text", "text": "Он провожает вас взглядом." }] }
+    ]
+  },
+  {
+    "id": "bone_altar", "biomes": ["ruins", "caves"],
+    "text": "Алтарь из костей. На нём выбито: «Кровь за силу».",
+    "options": [
+      { "id": "blood", "label": "Отдать кровь", "success": [{ "do": "damage", "amount": 3, "target": "leader" }, { "do": "item", "itemId": "bone_charm" }, { "do": "text", "text": "Кости шевелятся и складываются в оберег." }] },
+      { "id": "read", "label": "Прочесть остальные знаки", "check": { "attr": "INT", "dc": 13 }, "success": [{ "do": "xp", "amount": 25 }, { "do": "doom", "delta": -1 }, { "do": "text", "text": "Это не алтарь, а предостережение. Теперь вы знаете, чего бояться." }], "fail": [{ "do": "spawn", "monsters": ["skeleton_guard"] }] }
+    ]
+  },
+  {
+    "id": "merchant_cart", "biomes": ["forest", "mountains", "ruins"],
+    "text": "Перевёрнутая телега торговца. Хозяина нигде нет, следы ведут в чащу.",
+    "options": [
+      { "id": "loot", "label": "Собрать уцелевшее", "success": [{ "do": "gold", "amount": 20 }, { "do": "item", "itemId": "torch" }, { "do": "doom", "delta": 1 }, { "do": "text", "text": "Чужое добро тянет плечи." }] },
+      { "id": "track", "label": "Пойти по следам", "check": { "attr": "INT", "dc": 12 }, "success": [{ "do": "text", "text": "Торговец жив и прячется в овраге. В благодарность он отдаёт амулет." }, { "do": "item", "itemId": "owl_eye" }], "fail": [{ "do": "spawn", "monsters": ["bandit_brute", "bandit_archer"] }] }
+    ]
+  },
+  {
+    "id": "will_lights", "biomes": ["swamp", "forest"],
+    "text": "Над водой пляшут огоньки и зовут за собой. Один подлетает совсем близко.",
+    "options": [
+      { "id": "follow", "label": "Пойти за огоньками", "check": { "attr": "SPI", "dc": 13 }, "success": [{ "do": "reveal", "radius": 9 }, { "do": "light", "delta": 4 }, { "do": "text", "text": "Огоньки выводят на сухую тропу и тают." }], "fail": [{ "do": "spawn", "monsters": ["will_o_wisp", "will_o_wisp"] }] },
+      { "id": "catch", "label": "Поймать огонёк в фонарь", "check": { "attr": "DEX", "dc": 12 }, "success": [{ "do": "light", "delta": 8 }, { "do": "text", "text": "Фонарь светит холодным зелёным светом." }], "fail": [{ "do": "light", "delta": -4 }, { "do": "text", "text": "Огонёк гасит пламя и уносится." }] }
+    ]
   }
 ]

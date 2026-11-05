@@ -63,19 +63,24 @@ export function damageHero(ctx: Ctx, heroId: string, raw: number, sourceId: stri
 /** Если в строю не осталось героев — поход окончен. */
 export function checkWipe(ctx: Ctx): boolean {
   if (ctx.ended) return true;
-  if (upHeroes(ctx.s).length > 0) return false;
+  const up = upHeroes(ctx.s);
+  if (up.length > 0) {
+    // Ведущий упал (ловушка, событие) — карту ведёт следующий в строю, иначе отряд застрянет.
+    if (ctx.s.phase === "explore" && !up.some((h) => h.id === ctx.s.leaderId)) ctx.emit({ type: "LEADER_CHANGED", heroId: up[0]!.id });
+    return false;
+  }
   if (!ctx.s.tutorial) for (const h of ctx.s.heroes) if (h.status === "downed") ctx.emit({ type: "HERO_DIED", heroId: h.id });
   finish(ctx, "defeat");
   return true;
 }
 
 /** Итог похода: опыт и найденное. Золото и лут сохраняются при победе и отступлении. */
-export function finish(ctx: Ctx, reason: "victory" | "defeat" | "retreat"): void {
+export function finish(ctx: Ctx, reason: "victory" | "defeat" | "retreat", opts: { fullXp?: boolean } = {}): void {
   const r = balance.rewards;
   const kills = ctx.s.killed * r.xpPerMonsterCost;
   const base = kills + ctx.s.bonusXp;
   const xp =
-    reason === "victory" ? base + ctx.s.tier * r.xpVictoryPerTier : reason === "retreat" ? Math.floor((base * r.xpRetreatShare) / 100) : 0;
+    reason === "victory" ? base + ctx.s.tier * r.xpVictoryPerTier : reason === "retreat" ? (opts.fullXp ? base : Math.floor((base * r.xpRetreatShare) / 100)) : 0;
   const keep = reason !== "defeat";
   ctx.emit({ type: "REWARDS", xp, gold: keep ? ctx.s.bag.gold : 0, items: keep ? [...ctx.s.bag.items] : [], reason });
   ctx.emit({ type: "SESSION_ENDED", reason });

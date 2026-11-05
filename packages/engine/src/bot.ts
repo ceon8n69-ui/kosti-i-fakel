@@ -9,7 +9,7 @@ import type { CommandBody, RObject, SessionState } from "./types.js";
  * Используется в тестах проходимости и симуляторе. Видит только то же, что игрок,
  * плюс полное состояние объектов (как автоматический мастер) — секреты ищет обыском.
  */
-export function botStep(s: SessionState, heroId: string, memo: { searches: Set<string> } = { searches: new Set() }): CommandBody | null {
+export function botStep(s: SessionState, heroId: string, memo: { searches: Set<string>; danger?: boolean; waits?: number } = { searches: new Set() }): CommandBody | null {
   const h = s.heroes.find((x) => x.id === heroId);
   if (!h || s.phase === "ended") return null;
   if (s.phase === "combat") {
@@ -51,6 +51,9 @@ export function botStep(s: SessionState, heroId: string, memo: { searches: Set<s
         return o.state === "revealed";
       case "treasury":
         return true;
+      case "event":
+        // Развилка экспедиции: бот идёт дальше (опасной тропой, если так задано).
+        return o.eventId === "crossroads" && !o.used;
       default:
         return false;
     }
@@ -63,6 +66,14 @@ export function botStep(s: SessionState, heroId: string, memo: { searches: Set<s
     if ((o.type === "door" || o.type === "chest") && o.locked && !(o.keyId && s.bag.keys.includes(o.keyId)))
       return o.lockDc ? { type: "INTERACT", heroId, objectId: o.id, verb: "force" } : null;
     if (o.type === "campfire") return { type: "REST", heroId, objectId: o.id };
+    if (o.type === "event") {
+      // Сначала всё ценное на карте, потом развилка.
+      // (если что-то ценное недостижимо — не ждём вечно).
+      memo.waits = (memo.waits ?? 0) + 1;
+      if (memo.waits < 30 && targets.some((x) => x.type !== "event" && x.type !== "trap" && x.type !== "door")) continue;
+      memo.waits = 0;
+      return { type: "CHOOSE_OPTION", heroId, objectId: o.id, optionId: memo.danger ? "danger" : "go" };
+    }
     if (o.type === "treasury" && s.objects.some((x) => x.type === "key" && !x.used && vis(x))) continue;
     return { type: "INTERACT", heroId, objectId: o.id, verb: "use" };
   }
@@ -90,21 +101,21 @@ export function botStep(s: SessionState, heroId: string, memo: { searches: Set<s
     }
   if (frontier) return { type: "MOVE", heroId, x: frontier.x, y: frontier.y };
   // Тупик: обыскать здесь, потом пройти к непрочёсанным местам.
-  const here = `${s.pos.x},${s.pos.y}`;
+  const here = `${s.stage}:${s.pos.x},${s.pos.y}`;
   if (!memo.searches.has(here)) {
     memo.searches.add(here);
     return { type: "SEARCH", heroId };
   }
   for (let y = 0; y < s.def.size.h; y++)
     for (let x = 0; x < s.def.size.w; x++) {
-      if (memo.searches.has(`${x},${y}`) || !isSeen(s, x, y) || !passable(s, x, y)) continue;
+      if (memo.searches.has(`${s.stage}:${x},${y}`) || !isSeen(s, x, y) || !passable(s, x, y)) continue;
       if (!NEAR.some(([dx, dy]) => s.tiles[y + dy]?.[x + dx] === "#")) continue;
       if (canPath(s, x, y)) return { type: "MOVE", heroId, x, y };
     }
   return null;
 }
 
-const ORDER: Record<string, number> = { key: 0, lever: 1, chest: 2, npc: 3, altar: 4, trap: 5, campfire: 6, door: 7, treasury: 8 };
+const ORDER: Record<string, number> = { key: 0, lever: 1, chest: 2, npc: 3, altar: 4, trap: 5, campfire: 6, door: 7, treasury: 8, event: 9 };
 const order = (a: RObject, b: RObject) => (ORDER[a.type] ?? 9) - (ORDER[b.type] ?? 9);
 
 const NEAR: [number, number][] = [

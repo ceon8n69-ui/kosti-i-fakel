@@ -169,6 +169,17 @@ export async function animateEvent(ev: GameEvent, d: VisibleState, stage: Stage3
       apply();
       ui.toast(`${ev.name} ${ui.t("toast.ally")}`, "gold");
       return;
+    case "STAGE_ENTERED": {
+      play("crit");
+      hapticImpact("heavy");
+      ui.toast(`${ui.t("stage.depth")} ${ev.stage} · ${ev.title}${ev.danger ? " ☠" : ""}`, ev.danger ? "bad" : "gold");
+      if (stage) {
+        await stage.fadeOut(400);
+        stage.map.reset();
+      }
+      apply();
+      return;
+    }
     case "XP_BONUS":
       apply();
       ui.toast(`+${ev.amount} ${ui.t("end.xp")}`, "good");

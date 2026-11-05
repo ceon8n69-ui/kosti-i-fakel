@@ -73,6 +73,8 @@ export interface Monster {
   boss: boolean;
   /** small — осколок слизня: не делится повторно. */
   variant?: "small";
+  /** Элитный вожак: особое свойство. */
+  elite?: EliteAffix;
   block: number;
   poison: number;
   alive: boolean;
@@ -80,6 +82,10 @@ export interface Monster {
   age: number;
   intents: Intent[];
 }
+
+/** Свойства элитных врагов: броня, ярость (+урон), яд в атаках, регенерация в начале раунда. */
+export type EliteAffix = "armored" | "furious" | "venomous" | "regen";
+export const ELITE_AFFIXES: EliteAffix[] = ["armored", "furious", "venomous", "regen"];
 
 export type ObjectState = "armed" | "revealed" | "disarmed" | "triggered";
 
@@ -163,6 +169,9 @@ export interface SessionState {
   /** Союзники, помогающие в следующей стычке. */
   allies: { name: string; damage: number }[];
   biome: string;
+  /** Глубина экспедиции: номер текущей карты и сколько всего (у подземелий 1/1). */
+  stage: number;
+  stages: number;
   /** Последние тексты истории (видны всем). */
   story: string[];
   nextId: number;
@@ -234,6 +243,8 @@ export type GameEvent =
   | E<"GOLD_CHANGED", { delta: number; gold: number }>
   | E<"ALLY_JOINED", { name: string; damage: number }>
   | E<"XP_BONUS", { amount: number }>
+  /** Переход на следующую глубину: новая карта целиком (клиенту — без описания). */
+  | E<"STAGE_ENTERED", { stage: number; biome: string; title: string; danger: boolean; def?: DungeonDefinition }>
   | E<"REWARDS", { xp: number; gold: number; items: string[]; reason: "victory" | "defeat" | "retreat" }>
   | E<"MONSTER_SPAWNED", { monster: Monster; reason: "encounter" | "split" | "summon" }>
   | E<"ROUND_STARTED", { round: number }>

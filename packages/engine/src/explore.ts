@@ -5,6 +5,7 @@ import { upHeroes } from "./faces.js";
 import { cheb, findPath, isSeen, key, objectsAt, roomOf, visibleFrom, visibleObject, visibleTile, type Cell } from "./grid.js";
 import { hero as getHero } from "./reducer.js";
 import { startEncounter } from "./combat.js";
+import { generateExpedition } from "./generate.js";
 import { fireRules } from "./rules.js";
 import type { Outcome } from "@kf/schema";
 import type { RObject, SessionState } from "./types.js";
@@ -62,6 +63,31 @@ export function enterDungeon(ctx: Ctx): void {
   const intro = ctx.s.def.texts.intro;
   if (intro) ctx.emit({ type: "TEXT_SHOWN", textId: "intro", text: intro });
   revealAround(ctx);
+}
+
+/**
+ * Спуск на следующую глубину экспедиции. Зерно новой карты — четыре броска того же генератора,
+ * поэтому карта проверяема по журналу, а заранее её не узнать.
+ */
+export function nextStage(ctx: Ctx, biome: string, danger: boolean): void {
+  const s = ctx.s;
+  const ex = balance.expedition;
+  let seedHex = "";
+  for (let i = 0; i < 4; i++) seedHex += ctx.rng.int(0x10000).toString(16).padStart(4, "0");
+  const stage = s.stage + 1;
+  const def = generateExpedition({ seedHex, biome, tier: s.tier as 1 | 2 | 3, partySize: s.partySize, stage, stages: s.stages, danger, avoidEvents: s.def.events.map((e) => e.id) });
+  // Опыт за пройденную глубину; опасная тропа — сверху.
+  ctx.emit({ type: "XP_BONUS", amount: (ex.stageXpPerTier + (s.def.danger ? ex.dangerXpPerTier : 0)) * s.tier });
+  ctx.emit({ type: "STAGE_ENTERED", stage, biome: def.biome, title: def.title, danger, def });
+  if (ex.stageLight) changeLight(ctx, ex.stageLight, "stage");
+  // Привал на развилке: упавшие поднимаются, раненые немного лечатся.
+  for (const h of s.heroes) {
+    if (h.status === "dead") continue;
+    const amount = Math.max(1, Math.ceil((h.maxHp * ex.stageHealPercent) / 100));
+    if (h.status === "downed") ctx.emit({ type: "HERO_RAISED", heroId: h.id, hp: Math.min(h.maxHp, amount) });
+    else if (h.hp < h.maxHp) ctx.emit({ type: "HEALED", targetId: h.id, amount: Math.min(amount, h.maxHp - h.hp), sourceId: "stage" });
+  }
+  enterDungeon(ctx);
 }
 
 const armedTrapAt = (s: SessionState, x: number, y: number) =>
@@ -148,7 +174,7 @@ export function move(ctx: Ctx, path: Cell[]): void {
   if (stop?.kind === "plate" && stop.objectId) useObject(ctx, s.leaderId, s.objects.find((o) => o.id === stop!.objectId)!);
   if (stop?.kind === "encounter" && stop.encounterId) {
     const e = s.def.encounters.find((x) => x.id === stop!.encounterId)!;
-    startEncounter(ctx, e.id, e.monsters, e.textId);
+    startEncounter(ctx, e.id, e.monsters, e.textId, !!e.elite);
   }
 
   function flush() {
@@ -473,6 +499,12 @@ export function applyOutcomes(ctx: Ctx, heroId: string, outcomes: Outcome[], enc
       case "xp":
         ctx.emit({ type: "XP_BONUS", amount: out.amount });
         break;
+      case "descend":
+        if (s.stage < s.stages) nextStage(ctx, out.biome, out.danger);
+        return;
+      case "leave":
+        if (s.def.generated) finish(ctx, "retreat", { fullXp: true });
+        return;
     }
   }
 }

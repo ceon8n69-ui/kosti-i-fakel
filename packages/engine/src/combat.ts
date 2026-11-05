@@ -5,31 +5,42 @@ import type { Ctx } from "./ctx.js";
 import { aliveMonsters, effectiveFace, isDamageFace, meleeTargets, upHeroes } from "./faces.js";
 import { hero as getHero, monster as getMonster } from "./reducer.js";
 import { fireRules } from "./rules.js";
-import type { Assignment, Hero, Intent, Monster, SessionState } from "./types.js";
+import { ELITE_AFFIXES, type Assignment, type EliteAffix, type Hero, type Intent, type Monster, type SessionState } from "./types.js";
 
-export function createMonster(kind: string, id: string, partySize: number, hpOverride?: number): Monster {
+export function createMonster(kind: string, id: string, partySize: number, hpOverride?: number, elite?: EliteAffix, hpPercent = 100): Monster {
   const def = balance.monsters.find((m) => m.id === kind);
   if (!def) throw new Error(`unknown monster ${kind}`);
   const key = String(Math.min(4, Math.max(1, partySize)));
   const scale = (def.boss ? balance.bossHpScale[key] : balance.partyHpScale[key]) ?? 1;
-  const hp = Math.max(1, Math.round((hpOverride ?? def.hp) * scale));
-  return { id, kind, hp, maxHp: hp, armor: def.armor, row: def.row, boss: def.boss, block: 0, poison: 0, alive: true, age: 0, intents: [] };
+  const e = balance.expedition.elite;
+  const hp = Math.max(1, Math.round(((hpOverride ?? def.hp) * scale * (elite ? e.hpPercent : 100) * hpPercent) / 10000));
+  const armor = def.armor + (elite === "armored" ? e.armor : 0);
+  return { id, kind, hp, maxHp: hp, armor, row: def.row, boss: def.boss, block: 0, poison: 0, alive: true, age: 0, intents: [], ...(elite ? { elite } : {}) };
 }
 
-export function spawn(ctx: Ctx, kind: string, reason: "encounter" | "split" | "summon", hpOverride?: number, variant?: "small"): void {
-  const m = createMonster(kind, `m${ctx.s.nextId}`, ctx.s.partySize, hpOverride);
+export function spawn(ctx: Ctx, kind: string, reason: "encounter" | "split" | "summon", hpOverride?: number, variant?: "small", elite?: EliteAffix): void {
+  const solo = ctx.s.def.generated && ctx.s.partySize === 1;
+  const m = createMonster(kind, `m${ctx.s.nextId}`, ctx.s.partySize, hpOverride, elite, solo ? balance.expedition.soloHpPercent : 100);
   if (variant) m.variant = variant;
   ctx.emit({ type: "MONSTER_SPAWNED", monster: m, reason });
 }
 
 /** Начало боя: текст, монстры, первый раунд. */
-export function startEncounter(ctx: Ctx, encounterId: string, kinds: string[], textId?: string): void {
+export function startEncounter(ctx: Ctx, encounterId: string, kinds: string[], textId?: string, elite = false): void {
   ctx.emit({ type: "ENCOUNTER_STARTED", encounterId, kinds });
   if (textId) {
     const text = ctx.s.def.texts[textId];
     if (text) ctx.emit({ type: "TEXT_SHOWN", textId, text });
   }
-  for (const kind of kinds) spawn(ctx, kind, "encounter");
+  // Элитная стычка: самый дорогой монстр группы становится вожаком со случайным свойством.
+  let leader = -1;
+  let affix: EliteAffix | undefined;
+  if (elite && kinds.length) {
+    const costOf = (k: string) => balance.monsters.find((m) => m.id === k)?.cost ?? 0;
+    leader = kinds.reduce((best, k, i) => (costOf(k) > costOf(kinds[best]!) ? i : best), 0);
+    affix = ELITE_AFFIXES[ctx.rng.int(ELITE_AFFIXES.length)]!;
+  }
+  kinds.forEach((kind, i) => spawn(ctx, kind, "encounter", undefined, undefined, i === leader ? affix : undefined));
   startRound(ctx, 1);
 }
 
@@ -113,11 +124,26 @@ function intentsFor(ctx: Ctx, m: Monster): Intent[] {
     default:
       throw new Error(`unknown behavior ${def.behavior}`);
   }
-  return out.filter((x): x is Intent => x !== null);
+  const res = out.filter((x): x is Intent => x !== null);
+  // Свойства элиты: ярость — больше урона, яд — каждая атака отравляет.
+  if (m.elite === "furious" || m.elite === "venomous") {
+    const e = balance.expedition.elite;
+    for (const it of res) {
+      if (it.kind !== "attack") continue;
+      if (m.elite === "furious") it.amount += e.damage;
+      else it.poison = (it.poison ?? 0) + e.poison;
+    }
+  }
+  return res;
 }
 
 export function startRound(ctx: Ctx, round: number): void {
   ctx.emit({ type: "ROUND_STARTED", round });
+  // Регенерация элиты — в начале каждого раунда, кроме первого.
+  if (round > 1)
+    for (const m of aliveMonsters(ctx.s))
+      if (m.elite === "regen" && m.hp < m.maxHp)
+        ctx.emit({ type: "HEALED", targetId: m.id, amount: Math.min(balance.expedition.elite.regen, m.maxHp - m.hp), sourceId: m.id });
   const intents: Record<string, Intent[]> = {};
   for (const m of aliveMonsters(ctx.s)) intents[m.id] = intentsFor(ctx, m);
   ctx.emit({ type: "INTENTS_SHOWN", intents });
@@ -141,7 +167,8 @@ function damageMonster(ctx: Ctx, m: Monster, face: Face, sourceId: string): void
   const src = ctx.s.heroes.find((h) => h.id === sourceId);
   const bonus = src && (face.t === "M" || face.t === "L" || face.t === "I") ? src.mods.dmg[face.t] : 0;
   const raw = face.n + bonus;
-  const armor = face.t === "I" ? 0 : Math.min(m.armor, raw);
+  // Броня гасит урон, но не весь: каждый удар оставляет хотя бы 1 (иначе одиночка против каменной твари — тупик).
+  const armor = face.t === "I" ? 0 : Math.max(0, Math.min(m.armor, raw - 1));
   const afterArmor = raw - armor;
   const blocked = Math.min(m.block, afterArmor);
   const amount = Math.min(m.hp, afterArmor - blocked);

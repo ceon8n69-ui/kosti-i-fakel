@@ -28,6 +28,9 @@ export interface VisibleState {
   encounters: { id: string; kinds: string[]; x: number; y: number }[];
   bag: SessionState["bag"];
   biome: string;
+  stage: number;
+  stages: number;
+  danger: boolean;
   allies: SessionState["allies"];
   story: string[];
   ended: SessionState["ended"];
@@ -68,6 +71,9 @@ export function project(s: SessionState, viewerId: string): VisibleState {
       .map((e) => ({ id: e.id, kinds: e.monsters, x: Math.floor(e.zone.x + e.zone.w / 2), y: Math.floor(e.zone.y + e.zone.h / 2) })),
     bag: clone(s.bag),
     biome: s.biome,
+    stage: s.stage,
+    stages: s.stages,
+    danger: !!s.def.danger,
     allies: clone(s.allies),
     story: [...s.story],
     ended: s.ended,
@@ -82,6 +88,11 @@ export function projectEvent(ev: GameEvent, viewerId: string): GameEvent | null 
       return { seq: ev.seq, type: "SESSION_ENTERED" };
     case "FACE_ASSIGNED":
       return ev.actorId === viewerId ? ev : null;
+    case "STAGE_ENTERED": {
+      // Новая карта целиком — только на сервере; клиент получит её видимую часть в состоянии.
+      const { def: _def, ...rest } = ev;
+      return rest;
+    }
     case "TILE_CHANGED":
       // Изменения плиток показываются только после того, как клетку увидят.
       return { ...ev, cells: [] };

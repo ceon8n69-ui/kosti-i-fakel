@@ -130,3 +130,8 @@
 .rewards .item-ic { width: 22px; height: 22px; vertical-align: middle; }
 .r-rare { border-color: #4f7fd6 !important; } .r-epic { border-color: #b46cf0 !important; box-shadow: 0 0 10px rgba(180,108,240,.35); }
 .intent.heal { background: rgba(10,50,20,.85); color: #b6f0c4; border-color: rgba(120,220,140,.4); }
+
+.hud-stage { font-size: 13px; padding: 2px 8px; border-radius: 10px; background: rgba(255, 220, 160, .08); border: 1px solid rgba(255, 220, 160, .18); white-space: nowrap; }
+.hud-stage.danger { border-color: rgba(220, 80, 60, .6); color: #ff9a80; }
+.unit-elite { position: absolute; top: -6px; right: -6px; font-size: 12px; background: #3a120c; border: 1px solid #d0503a; border-radius: 8px; padding: 0 4px; }
+.tag.elite { display: inline-block; margin-right: 4px; padding: 0 5px; border-radius: 6px; background: #4a1a10; border: 1px solid #e0703a; color: #ffc08a; font-size: 10px; }

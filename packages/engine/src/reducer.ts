@@ -1,3 +1,4 @@
+import { runtimeObjects } from "./session.js";
 import { balance } from "@kf/content";
 import { clone } from "./clone.js";
 import type { GameEvent, Hero, Monster, SessionState } from "./types.js";
@@ -18,6 +19,27 @@ export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
   switch (ev.type) {
     case "CHECK_ROLLED":
       break;
+    case "STAGE_ENTERED": {
+      // У клиента описания нет — новую карту он получит вместе с состоянием в конце пачки.
+      if (!ev.def) break;
+      const def = clone(ev.def);
+      const entrance = def.objects.find((o) => o.type === "entrance")!;
+      s.def = def;
+      s.dungeonId = def.id;
+      s.title = def.title;
+      s.biome = def.biome;
+      s.stage = ev.stage;
+      s.tiles = [...def.tiles];
+      s.seen = def.tiles.map((r) => "0".repeat(r.length));
+      s.pos = { x: entrance.x, y: entrance.y };
+      s.objects = runtimeObjects(def);
+      s.encounters = def.encounters.map((e) => ({ id: e.id, done: false, spotted: false }));
+      s.encounterId = null;
+      s.vars = Object.fromEntries(def.variables.map((v) => [v.id, v.initial]));
+      s.ruleFired = {};
+      s.monsters = [];
+      break;
+    }
     case "TRAP_REVEALED": {
       const o = obj(s, ev.objectId);
       o.hidden = false;
@@ -292,6 +314,8 @@ export function upgradeState(s: SessionState): SessionState {
   s.bonusXp ??= 0;
   s.allies ??= [];
   s.biome ??= "dungeon";
+  s.stage ??= 1;
+  s.stages ??= 1;
   for (const h of s.heroes) {
     h.equipment ??= [];
     h.mods ??= { dmg: { M: 0, L: 0, I: 0 }, block: 0, healAfter: 0, rerolls: 0, poison: 0, light: 0 } as SessionState["heroes"][number]["mods"];

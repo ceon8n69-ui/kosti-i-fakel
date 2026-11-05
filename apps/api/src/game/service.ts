@@ -95,7 +95,7 @@ export class GameService {
       } else {
         if (!EXPEDITION_BIOMES.includes(target.biome as never)) return { error: "no_dungeon" };
         // Отдельное секретное зерно карты: по нему нельзя восстановить броски, и наоборот.
-        def = generateExpedition({ seedHex: randomBytes(8).toString("hex"), biome: target.biome, tier: tierForLevel(maxLevel), partySize: members.length });
+        def = generateExpedition({ seedHex: randomBytes(8).toString("hex"), biome: target.biome, tier: tierForLevel(maxLevel), partySize: members.length, stage: 1, stages: balance.expedition.stages });
       }
       const equipment = await equippedKeys(tx, seeds.map((x) => x.h.id));
       const first = startSession({

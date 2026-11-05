@@ -67,6 +67,8 @@ export const EncounterSchema = z.object({
   textId: textId.optional(),
   /** Босс: победа над ним открывает сокровищницу (если так задано правилами). */
   boss: z.boolean().default(false),
+  /** Элитная стычка: вожак группы получает особое свойство и больше здоровья. */
+  elite: z.boolean().optional(),
 });
 export type Encounter = z.infer<typeof EncounterSchema>;
 
@@ -104,6 +106,10 @@ export const OutcomeSchema = z.discriminatedUnion("do", [
   z.object({ do: z.literal("reveal"), radius: int.min(1).max(12) }),
   z.object({ do: z.literal("ally"), name: z.string().max(24), damage: int.min(1).max(5) }),
   z.object({ do: z.literal("xp"), amount: int.min(1).max(200) }),
+  /** Только в экспедициях: перейти на следующую глубину (биом, опасная тропа). */
+  z.object({ do: z.literal("descend"), biome: z.string(), danger: z.boolean() }),
+  /** Только в экспедициях: вернуться в город с добычей и полным опытом. */
+  z.object({ do: z.literal("leave") }),
 ]);
 export type Outcome = z.infer<typeof OutcomeSchema>;
 
@@ -202,6 +208,11 @@ export const DungeonDefinitionSchema = z
     biome: z.enum(BIOMES).default("dungeon"),
     /** Сгенерировано (экспедиция), а не построено автором. */
     generated: z.boolean().default(false),
+    /** Экспедиция из нескольких глубин: номер этой карты и сколько всего. */
+    stage: int.min(1).max(9).optional(),
+    stages: int.min(1).max(9).optional(),
+    /** Опасная тропа: элитные враги и богаче добыча. */
+    danger: z.boolean().optional(),
     size: z.object({ w: int.min(4).max(32), h: int.min(4).max(32) }),
     tiles: z.array(z.string()),
     objects: z.array(DungeonObjectSchema).max(200),
@@ -228,7 +239,9 @@ export const DungeonDefinitionSchema = z
     }
     const count = (t: string) => d.objects.filter((o) => o.type === t).length;
     if (count("entrance") !== 1) ctx.addIssue({ code: "custom", message: "exactly one entrance required" });
-    if (count("treasury") !== 1) ctx.addIssue({ code: "custom", message: "exactly one treasury required" });
+    // Промежуточная глубина экспедиции заканчивается развилкой, а не сокровищницей.
+    const midStage = (d.stage ?? 1) < (d.stages ?? 1);
+    if (count("treasury") !== (midStage ? 0 : 1)) ctx.addIssue({ code: "custom", message: midStage ? "no treasury on a middle stage" : "exactly one treasury required" });
     if (count("campfire") > 2) ctx.addIssue({ code: "custom", message: "at most two campfires" });
     const textKeys = new Set(Object.keys(d.texts));
     const refs: string[] = [];

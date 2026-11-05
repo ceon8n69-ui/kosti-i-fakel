@@ -53,7 +53,7 @@ export function createHero(id: string, seed: HeroSeed): Hero {
   };
 }
 
-function runtimeObjects(def: DungeonDefinition): RObject[] {
+export function runtimeObjects(def: DungeonDefinition): RObject[] {
   return def.objects.map((o): RObject => {
     const r: RObject = { id: o.id, type: o.type, x: o.x, y: o.y, hidden: false };
     switch (o.type) {
@@ -167,6 +167,8 @@ export function startSession(params: { dungeonId?: string; dungeon?: DungeonDefi
     bonusXp: 0,
     allies: [],
     biome: def.biome,
+    stage: def.stage ?? 1,
+    stages: def.stages ?? 1,
     story: [],
     nextId: 1,
     ended: null,

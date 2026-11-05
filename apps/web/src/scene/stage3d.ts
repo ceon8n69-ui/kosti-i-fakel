@@ -410,6 +410,21 @@ export class Stage3D {
     await this.tw.wait(200);
   }
 
+  /** Затемнение при переходе на новую глубину экспедиции. */
+  async fadeOut(ms: number): Promise<void> {
+    const el = this.renderer.domElement;
+    el.style.transition = `opacity ${ms}ms`;
+    el.style.opacity = "0";
+    await this.tw.wait(ms + 20);
+  }
+
+  async fadeIn(ms: number): Promise<void> {
+    const el = this.renderer.domElement;
+    el.style.transition = `opacity ${ms}ms`;
+    el.style.opacity = "1";
+    await this.tw.wait(ms);
+  }
+
   /** Тап по экрану → клетка или объект карты. */
   pick(clientX: number, clientY: number): { objectId?: string; cell?: [number, number] } {
     const r = this.renderer.domElement.getBoundingClientRect();

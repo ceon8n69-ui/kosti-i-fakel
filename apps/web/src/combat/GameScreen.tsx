@@ -136,8 +136,22 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
           rerender();
           continue;
         }
-        for (const ev of b.events) await animateEvent(ev as GameEvent, dispRef.current, stageRef.current, ui);
+        let newStage = false;
+        for (const ev of b.events) {
+          // Анимация не должна держать игру: если что-то зависло (вкладка в фоне, слабая видеокарта) — идём дальше.
+          await Promise.race([animateEvent(ev as GameEvent, dispRef.current, stageRef.current, ui), new Promise((r) => setTimeout(r, 8000))]);
+          // Новая глубина: остальное в пачке — уже про новую карту, её целиком даёт состояние.
+          if ((ev as GameEvent).type === "STAGE_ENTERED") {
+            newStage = true;
+            break;
+          }
+        }
         snap(b.state);
+        if (newStage) {
+          await stageRef.current?.fadeIn(500);
+          const last = b.state.story.at(-1);
+          if (last) setStory({ text: last, id: Date.now() });
+        }
         rerender();
       }
     } finally {
@@ -334,6 +348,11 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
           </div>
           <b>{d?.light ?? "–"}</b>
         </div>
+        {truth && truth.stages > 1 && (
+          <div className={`hud-stage ${truth.danger ? "danger" : ""}`} title={t("stage.depth")}>
+            {truth.danger ? "☠" : "⛰"} {truth.stage}/{truth.stages}
+          </div>
+        )}
         <div className="hud-doom" title="Рок">
           ◆ <b>{d?.doom ?? 0}</b>
         </div>
@@ -378,7 +397,14 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
                   onClick={() => tapUnit(u.id)}
                 >
                   {isMon && <Intents intents={u.intents} />}
-                  <div className="u-name">{name}</div>
+                  <div className="u-name">
+                    {isMon && u.elite && (
+                      <span className="tag elite" title={tk(`elite.${u.elite}.d`)}>
+                        ★ {tk(`elite.${u.elite}`)}
+                      </span>
+                    )}
+                    {name}
+                  </div>
                   <div className="u-hp">
                     <i style={{ width: `${(u.hp / u.maxHp) * 100}%` }} />
                     <span>

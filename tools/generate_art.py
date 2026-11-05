@@ -105,7 +105,8 @@ def main():
         sys.exit("OPENAI_API_KEY is not set")
     SOURCE.mkdir(exist_ok=True)
     failures = []
-    for e in chosen:
+
+    def one(e):
         try:
             quality = e.get("quality", a.quality)
             raw = Path(a.from_file).read_bytes() if a.from_file else generate(e["prompt"], e["kind"], a.model, quality)
@@ -115,6 +116,12 @@ def main():
         except Exception as exc:
             failures.append(e["key"])
             print(f"FAIL {e['key']:16} {exc}", flush=True)
+
+    # Генерация в высоком качестве идёт минуты на картинку — запускаем несколько сразу.
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("ART_WORKERS", "4"))) as pool:
+        list(pool.map(one, chosen))
     if failures:
         sys.exit(f"{len(failures)} failed: {', '.join(failures)}")
 

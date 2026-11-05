@@ -101,7 +101,9 @@ export const BalanceSchema = z.object({
     relicSlots: int,
     consumableSlots: int,
   }),
-  scars: z.object({ max: int, choices: int }),
+  scars: z.object({ max: int, choices: int, total: int }),
+  rewards: z.object({ xpPerMonsterCost: int, xpVictoryPerTier: int, xpRetreatShare: int }),
+  explore: z.object({ searchRadius: int, trapSpotAttr: attr, adjacent: int, maxPathCells: int, startConsumables: z.array(z.string()) }),
   partyHpScale: z.record(z.string(), z.number()),
   tiers: z.array(
     z.object({ tier: int, heroLevels: z.tuple([int, int]), budget: int, maxPerRoom: int, maxMap: int, minHoard: int }),
@@ -153,3 +155,12 @@ export const ScenarioSchema = z.object({
   encounter: z.array(z.string()).min(1),
 });
 export type Scenario = z.infer<typeof ScenarioSchema>;
+
+export const ItemSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["consumable", "relic", "face"]),
+  effect: z.enum(["heal", "light", "retreat"]),
+  amount: int,
+  combat: z.boolean(),
+});
+export type Item = z.infer<typeof ItemSchema>;

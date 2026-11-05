@@ -24,6 +24,12 @@
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a herbalist healer woman in burgundy and cream clothes, a satchel of herbs, a wooden staff hung with bundles of dried herbs and a small green-glowing lantern, calm kind face."
  },
  {
+  "key": "ghost",
+  "kind": "mini",
+  "path": "apps/web/public/art/minis/ghost.png",
+  "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a translucent pale-blue ghost of an old well-keeper in a patched apron, holding a rusty bucket, sad kind face, wisps of mist instead of feet."
+ },
+ {
   "key": "rat_swarm",
   "kind": "mini",
   "path": "apps/web/public/art/minis/rat_swarm.png",

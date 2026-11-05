@@ -1,0 +1,5 @@
+[
+  { "id": "potion", "kind": "consumable", "effect": "heal", "amount": 5, "combat": true },
+  { "id": "torch", "kind": "consumable", "effect": "light", "amount": 8, "combat": true },
+  { "id": "return_scroll", "kind": "consumable", "effect": "retreat", "amount": 0, "combat": false }
+]

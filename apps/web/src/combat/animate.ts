@@ -6,11 +6,16 @@ import type { Stage3D, UnitVis } from "../scene/stage3d";
 export interface UiHooks {
   toast(text: string, tone?: "good" | "bad" | "gold"): void;
   floater(unitId: string, text: string, cls: string): void;
+  /** Надпись над клеткой карты (найденное золото, предметы). */
+  cellFloater(x: number, y: number, text: string, cls: string): void;
+  story(text: string, speaker?: string): void;
+  rewards(r: { xp: number; gold: number; items: string[]; reason: string }): void;
   render(): void;
   t(key: string): string;
 }
 
 /** Юниты для сцены из видимого состояния. */
+/** Юниты поля боя. */
 export function unitsOf(s: VisibleState): UnitVis[] {
   return [
     ...s.heroes.map((h): UnitVis => ({ id: h.id, kind: h.classId, side: "hero", row: h.row, status: h.status === "dead" ? "gone" : h.status })),
@@ -74,30 +79,124 @@ export async function animateEvent(ev: GameEvent, d: VisibleState, stage: Stage3
       return;
     }
     case "TRAP_REVEALED":
-      apply();
       ui.toast(ui.t("toast.trapFound"), "good");
-      await wait(300);
+      if (stage) {
+        stage.map.setObject({ id: ev.objectId, type: "trap", x: ev.x, y: ev.y, state: "revealed", trapId: ev.trapId }, true);
+        await stage.map.flashCell(ev.x, ev.y, "#f0a040");
+      }
+      apply();
       return;
-    case "TRAP_DISARMED":
+    case "TRAP_DISARMED": {
       apply();
       ui.toast(ui.t("toast.trapDisarmed"), "good");
+      const o = d.objects.find((x) => x.id === ev.objectId);
+      if (stage && o) stage.map.setObject({ ...o, state: "disarmed" }, true);
       return;
+    }
     case "TRAP_TRIGGERED":
-      apply();
       ui.toast(ui.t("toast.trapTriggered"), "bad");
       play("hit");
-      await wait(200);
+      hapticImpact("heavy");
+      if (stage) {
+        stage.map.setObject({ id: ev.objectId, type: "trap", x: ev.x, y: ev.y, state: "triggered", trapId: ev.trapId }, false);
+        await stage.map.flashCell(ev.x, ev.y, "#c0392b");
+      }
+      apply();
       return;
     case "PARTY_MOVED":
+      if (stage) await stage.map.walk(ev.path, () => play("dice", 0.15));
       apply();
+      return;
+    case "TILE_REVEALED":
       if (stage) {
-        stage.exploring = false;
-        await stage.regroup(unitsOf(d), true);
+        for (const [x, y, ch] of ev.cells) stage.map.setTile(x, y, ch, true);
+        for (const o of ev.objects) stage.map.setObject(o, true);
       }
+      apply();
+      return;
+    case "TILE_CHANGED":
+      if (stage) for (const [x, y, ch] of ev.cells) stage.map.setTile(x, y, ch, true);
+      apply();
+      return;
+    case "SECRET_FOUND":
+      ui.toast(ui.t("toast.secret"), "gold");
+      play("crit");
+      if (stage) {
+        stage.map.setTile(ev.object.x, ev.object.y, ".", true);
+        stage.map.setObject(ev.object, true);
+      }
+      apply();
+      return;
+    case "OBJECT_CHANGED": {
+      const o = d.objects.find((x) => x.id === ev.objectId);
+      apply();
+      if (stage && o) {
+        if (ev.patch.used && o.type === "key") stage.map.removeObject(o.id);
+        else stage.map.setObject({ ...o, ...(ev.patch as object) }, true);
+      }
+      if (o?.type === "door" && ev.patch.open) play("block");
+      await wait(200);
+      return;
+    }
+    case "TEXT_SHOWN":
+      apply();
+      ui.story(ev.text, ev.speaker);
+      await wait(250);
+      return;
+    case "ITEM_FOUND": {
+      apply();
+      const o = d.objects.find((x) => x.id === ev.objectId);
+      const parts = [ev.gold ? `+${ev.gold} ${ui.t("bag.gold")}` : "", ...ev.items.map((i) => `+${ui.t(`item.${i}`)}`), ...ev.keys.map(() => `+${ui.t("bag.key")}`)].filter(Boolean);
+      if (o) parts.forEach((p, i) => setTimeout(() => ui.cellFloater(o.x, o.y, p, "fl-loot"), i * 250));
+      play("heal");
+      haptic("success");
+      await wait(300);
+      return;
+    }
+    case "ITEM_USED":
+      apply();
+      ui.toast(`${ui.t(`item.${ev.itemId}`)}`, "good");
+      return;
+    case "PARTY_RESTED":
+      apply();
+      ui.toast(ui.t("toast.rest"), "good");
+      play("torch");
+      await wait(300);
+      return;
+    case "LEADER_CHANGED":
+      apply();
+      return;
+    case "ENCOUNTER_SPOTTED":
+      apply();
+      if (stage) stage.map.addFoes(ev.encounterId, ev.kinds, ev.x, ev.y, true);
+      ui.toast(ui.t("toast.spotted"), "bad");
+      await wait(350);
       return;
     case "ENCOUNTER_STARTED":
       apply();
-      stage?.clearDice();
+      if (stage) {
+        stage.map.removeFoes(ev.encounterId);
+        stage.setUnits(unitsOf(d));
+        await stage.transition("battle");
+      }
+      play("hit");
+      haptic("error");
+      return;
+    case "ENCOUNTER_ENDED":
+      ui.toast(ui.t("toast.encounterWon"), "gold");
+      play("victory");
+      await wait(500);
+      apply();
+      if (stage) {
+        stage.clearDice();
+        await stage.transition("map");
+      }
+      return;
+    case "REWARDS":
+      apply();
+      ui.rewards(ev);
+      return;
+    case "SESSION_ENTERED":
       return;
     case "MONSTER_SPAWNED":
       apply();

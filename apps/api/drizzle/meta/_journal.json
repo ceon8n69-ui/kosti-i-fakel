@@ -15,6 +15,20 @@
       "when": 1793855255770,
       "tag": "0001_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793859066662,
+      "tag": "0002_heroes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793870156341,
+      "tag": "0003_close_legacy_sessions",
+      "breakpoints": true
     }
   ]
 }

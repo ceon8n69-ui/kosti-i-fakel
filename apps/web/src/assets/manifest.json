@@ -92,6 +92,13 @@
         "color": "#e0a43a",
         "glyph": "Фнр"
       }
+    },
+    "ghost": {
+      "sprite": "art/minis/ghost.png",
+      "placeholder": {
+        "color": "#9fc3d6",
+        "glyph": "Дух"
+      }
     }
   },
   "table": {

@@ -27,6 +27,9 @@ MINIS = {
     "floating around it, the other holding a staff topped with a caged violet flame",
     "healer": "a herbalist healer woman in burgundy and cream clothes, a satchel of herbs, a wooden staff hung with "
     "bundles of dried herbs and a small green-glowing lantern, calm kind face",
+    # NPC
+    "ghost": "a translucent pale-blue ghost of an old well-keeper in a patched apron, holding a rusty bucket, sad kind face, "
+    "wisps of mist instead of feet",
     # Монстры
     "rat_swarm": "a heaving pile of five mangy brown sewer rats climbing over each other, beady red eyes, bared teeth",
     "skeleton_guard": "a skeleton soldier in rusted half-armour holding a round dented shield and a notched spear, "

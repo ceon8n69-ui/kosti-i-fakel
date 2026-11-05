@@ -103,3 +103,21 @@
 .overlay.flat .unit { position: static; transform: none !important; visibility: visible !important; }
 .flat-mini { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: bold; }
 .flat-mini.m { background: #5a1f1f; } .flat-mini.h { background: #2e4a6b; }
+
+/* Карта */
+.party-strip { position: absolute; left: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.ps-hero { background: rgba(15,10,6,.78); border: 1px solid var(--edge); border-radius: 10px; padding: 4px 8px; font-size: 12px; }
+.ps-hero.downed { opacity: .6; }
+.ps-hero .u-hp { width: 84px; }
+.story { display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid #4a3523; background: linear-gradient(#2a1d13, #1d140d); color: #f1e4cf; font: 15px/1.4 Georgia, serif; max-height: 118px; overflow: auto; animation: story-in .35s ease-out; }
+.story b { color: var(--fire); }
+@keyframes story-in { from { opacity: 0; transform: translateY(6px); } }
+.sheet-bg { position: fixed; inset: 0; background: rgba(5,3,2,.55); display: flex; align-items: flex-end; z-index: 6; animation: fade .2s; }
+.sheet { width: 100%; padding: 16px 16px calc(16px + var(--sb)); background: var(--panel); border-top: 1px solid var(--edge); border-radius: 18px 18px 0 0; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+.sheet h3 { margin: 0 0 4px; color: var(--fire); font-size: 18px; }
+.sheet .muted { text-align: left; }
+.sheet.log p { margin: 0 0 8px; font-size: 14px; color: #e4d5bd; }
+.act.item { flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; }
+.rewards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 6px; }
+.rewards span { padding: 6px 10px; border-radius: 10px; background: #1b130d; border: 1px solid var(--edge); font-size: 14px; }
+.fl-loot { color: #ffd45c; font-size: 18px; }

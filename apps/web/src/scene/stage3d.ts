@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import manifest from "../assets/manifest.json";
 import trajectories from "../dice/trajectories.json";
 import { drawFace } from "./glyphs";
+import { MapView } from "./mapview";
 import { ease, Tweens } from "./tween";
 
 export interface UnitVis {
@@ -87,6 +88,12 @@ export class Stage3D {
   private lowQuality = false;
   private faceTexCache = new Map<string, THREE.CanvasTexture>();
   private particles: { pts: THREE.Points; vel: Float32Array; life: number }[] = [];
+  /** Поле боя (плитки арены и миниатюры боя) и карта подземелья — показывается что-то одно. */
+  private battleGroup = new THREE.Group();
+  readonly map: MapView;
+  mode: "map" | "battle" = "map";
+  private follow = new THREE.Vector3();
+  private raycaster = new THREE.Raycaster();
   /** Множитель от пропуска (1 или 4) и замедление крита (0.35). */
   private skipSpeed = 1;
   private critSlow = 1;
@@ -123,8 +130,21 @@ export class Stage3D {
     this.torch.position.copy(at(0, 0.2, 2.6));
     this.scene.add(this.torch);
 
+    this.scene.add(this.battleGroup);
     this.buildTable();
     this.buildTray();
+    this.map = new MapView(this.tw, {
+      makeMini: (kind, side, small) => {
+        const m = this.buildMini({ id: kind, kind, side, row: "front", small, status: "up" });
+        m.root.userData.height = m.height;
+        return m.root as THREE.Group & { userData: { height: number } };
+      },
+      canvasTex: (w, h, draw) => this.canvasTex(w, h, draw),
+      burst: (at3, color, n) => this.burst(at3, color, n),
+      onImpact: (st) => this.hooks.onImpact?.(st),
+    });
+    this.scene.add(this.map.group);
+    this.setMode("map");
     this.resize();
     window.addEventListener("resize", this.resize);
     this.loop();
@@ -166,7 +186,8 @@ export class Stage3D {
         }
       }
     }, 4);
-    const table = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ map: wood, roughness: 0.85 }));
+    wood.repeat.set(24, 24);
+    const table = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshStandardMaterial({ map: wood, roughness: 0.85 }));
     table.rotation.x = -Math.PI / 2;
     table.receiveShadow = true;
     this.scene.add(table);
@@ -194,7 +215,7 @@ export class Stage3D {
         t.position.copy(at(c, d + 0.05, 0.06));
         t.rotation.y = Math.PI / 4;
         t.receiveShadow = true;
-        this.scene.add(t);
+        this.battleGroup.add(t);
       }
   }
 
@@ -239,16 +260,19 @@ export class Stage3D {
     this.renderer.domElement.style.height = "100%";
     const aspect = w / h;
     // Ширина стола помещается всегда, высота подстраивается под экран.
-    let halfW = 2.25;
+    // На карте камера дальше: видно больше клеток вокруг отряда.
+    let halfW = this.mode === "map" ? 3.4 : 2.25;
     let halfH = halfW / aspect;
-    if (halfH < 2.75) {
-      halfH = 2.75;
+    const minH = this.mode === "map" ? 3.6 : 2.75;
+    if (halfH < minH) {
+      halfH = minH;
       halfW = halfH * aspect;
     }
     Object.assign(this.camera, { left: -halfW, right: halfW, top: halfH, bottom: -halfH });
     const elev = Math.atan(1 / Math.SQRT2); // классическая изометрия ≈35.26°
     const dir = new THREE.Vector3(Math.cos(elev) * Math.SQRT1_2, Math.sin(elev), Math.cos(elev) * Math.SQRT1_2);
-    this.camTarget.copy(at(0, 0.45, 0));
+    if (this.mode === "battle") this.camTarget.copy(at(0, 0.45, 0));
+    else this.camTarget.copy(this.follow);
     this.camera.position.copy(this.camTarget).addScaledVector(dir, 30);
     this.camera.lookAt(this.camTarget);
     this.camera.updateProjectionMatrix();
@@ -266,6 +290,15 @@ export class Stage3D {
     this.tw.tick(dt);
     this.torch.intensity = this.torchBase * (0.9 + Math.sin(now / 90) * 0.04 + Math.sin(now / 37) * 0.03 + Math.random() * 0.03);
     this.stepParticles(dt);
+    if (this.mode === "map") {
+      this.map.tick(now);
+      const p = this.map.cellPos(this.map.pos.x, this.map.pos.y);
+      // Отряд — чуть выше центра экрана, внизу остаётся место для лотка с кубиками.
+      const want = p.clone().addScaledVector(V, -1.1);
+      this.follow.lerp(want, 1 - Math.pow(0.002, dt / 1000));
+      if (this.camera.zoom === this.baseZoom) this.placeCamera(this.follow);
+      this.placeTray();
+    }
     if (this.shakeAmp > 0.001) {
       this.camera.position.x += (Math.random() - 0.5) * this.shakeAmp;
       this.camera.position.z += (Math.random() - 0.5) * this.shakeAmp;
@@ -289,6 +322,61 @@ export class Stage3D {
       this.renderer.shadowMap.enabled = false;
       this.resize();
     }
+  }
+
+  private placeCamera(target: THREE.Vector3): void {
+    const dir = this.camera.position.clone().sub(this.camTarget).normalize();
+    this.camTarget.copy(target);
+    this.camera.position.copy(target).addScaledVector(dir, 30);
+    this.camera.lookAt(target);
+  }
+
+  /** Лоток с кубиками стоит у нижнего края экрана, в бою — перед героями. */
+  private placeTray(): void {
+    if (this.mode === "battle") this.trayRoot.position.copy(at(0, TRAY_DEPTH));
+    else this.trayRoot.position.copy(this.camTarget).addScaledVector(V, -2.9).setY(0.02);
+    // На карте лоток появляется только на время броска, чтобы не закрывать клетки.
+    this.trayRoot.visible = this.mode === "battle" || this.dice.some((d) => d.mesh.visible) || !!this.d20?.mesh.visible;
+  }
+
+  setMode(mode: "map" | "battle"): void {
+    this.mode = mode;
+    this.battleGroup.visible = mode === "battle";
+    this.map.group.visible = mode === "map";
+    for (const m of this.minis.values()) m.root.visible = mode === "battle" && m.vis.status !== "gone";
+    if (mode === "map") {
+      this.follow.copy(this.map.cellPos(this.map.pos.x, this.map.pos.y).addScaledVector(V, -1.1));
+      this.clearDice();
+    }
+    this.resize();
+    this.placeTray();
+  }
+
+  /** Переход между картой и боем: затемнение и смена сцены. */
+  async transition(mode: "map" | "battle"): Promise<void> {
+    if (this.mode === mode) return;
+    const el = this.renderer.domElement;
+    el.style.transition = "opacity .25s";
+    el.style.opacity = "0";
+    await this.tw.wait(260);
+    this.setMode(mode);
+    el.style.opacity = "1";
+    await this.tw.wait(200);
+  }
+
+  /** Тап по экрану → клетка или объект карты. */
+  pick(clientX: number, clientY: number): { objectId?: string; cell?: [number, number] } {
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    return this.map.pick(this.raycaster);
+  }
+
+  /** Экранная точка клетки карты. */
+  cellScreen(x: number, y: number, h = 0.9): { x: number; y: number } {
+    const p = this.map.cellPos(x, y, h).project(this.camera);
+    const r = this.renderer.domElement.getBoundingClientRect();
+    return { x: ((p.x + 1) / 2) * r.width, y: ((1 - p.y) / 2) * r.height };
   }
 
   setSkip(on: boolean): void {
@@ -366,6 +454,12 @@ export class Stage3D {
   }
 
   private createMini(v: UnitVis): Mini {
+    const m = this.buildMini(v);
+    this.battleGroup.add(m.root);
+    return m;
+  }
+
+  buildMini(v: UnitVis): Mini {
     const scale = v.boss ? 1.35 : v.small ? 0.7 : 1;
     // Пропорции совпадают с готовым артом 256×384.
     const height = (v.side === "hero" ? 1.15 : 1.05) * scale;
@@ -395,7 +489,6 @@ export class Stage3D {
     root.add(pivot, shadow);
     // Спрайт повёрнут к камере.
     sprite.rotation.y = Math.PI / 4;
-    this.scene.add(root);
     return { vis: v, root, pivot, sprite, shadow, height: height + 0.1 };
   }
 
@@ -404,7 +497,7 @@ export class Stage3D {
     const live = new Set(units.filter((u) => u.status !== "gone").map((u) => u.id));
     for (const [id, m] of this.minis)
       if (!live.has(id)) {
-        this.scene.remove(m.root);
+        this.battleGroup.remove(m.root);
         this.minis.delete(id);
       }
     const groups = new Map<string, UnitVis[]>();
@@ -417,7 +510,7 @@ export class Stage3D {
       list.forEach((u, i) => {
         let m = this.minis.get(u.id);
         if (!m || m.vis.kind !== u.kind || !!m.vis.small !== !!u.small) {
-          if (m) this.scene.remove(m.root);
+          if (m) this.battleGroup.remove(m.root);
           m = this.createMini(u);
           this.minis.set(u.id, m);
         }
@@ -738,6 +831,7 @@ export class Stage3D {
     this.dice = [];
     if (this.d20) this.trayRoot.remove(this.d20.mesh);
     this.d20 = null;
+    this.placeTray();
   }
 
   private async playTraj(traj: Traj, lanes: { lane: number; obj: DieObj }[], half: number, crit: boolean): Promise<void> {
@@ -759,7 +853,7 @@ export class Stage3D {
       if (crit && !slowed && k > 0.45) {
         slowed = true;
         this.critSlow = 0.35;
-        void this.zoomTo(1.55, at(0, TRAY_DEPTH + 0.3, 0), 500);
+        void this.zoomTo(1.55, this.trayRoot.position.clone().addScaledVector(V, 0.3), 500);
       }
     }, ease.linear);
     this.critSlow = 1;
@@ -808,8 +902,15 @@ export class Stage3D {
     });
     obj.mesh.visible = true;
     const crit = natural === 1 || natural === 20;
+    this.placeTray();
     await this.playTraj(tr, [{ lane: 0, obj }], T.d20Radius * 0.8, crit);
     if (crit) await this.tableFx(natural === 20 ? "crit" : "fumble");
+    // На карте кубик немного полежит и уберётся вместе с лотком.
+    if (this.mode === "map") {
+      await this.tw.wait(700);
+      obj.mesh.visible = false;
+      this.placeTray();
+    }
   }
 
   private async zoomTo(z: number, focus: THREE.Vector3, ms: number): Promise<void> {
@@ -832,12 +933,12 @@ export class Stage3D {
     const color = kind === "crit" ? "#ffd45c" : "#c0392b";
     if (this.d20) this.burst(this.trayRoot.localToWorld(this.d20.mesh.position.clone()), color, 40);
     const glow = new THREE.PointLight(color, 0, 6);
-    glow.position.copy(at(0, TRAY_DEPTH, 1.2));
+    glow.position.copy(this.trayRoot.position).setY(1.2);
     this.scene.add(glow);
     await this.tw.run(700, (k) => (glow.intensity = Math.sin(k * Math.PI) * 40));
     this.scene.remove(glow);
     await this.tw.wait(250);
-    await this.zoomTo(this.baseZoom, at(0, 0.45, 0), 450);
+    await this.zoomTo(this.baseZoom, this.mode === "battle" ? at(0, 0.45, 0) : this.follow.clone(), 450);
   }
 
   dispose(): void {

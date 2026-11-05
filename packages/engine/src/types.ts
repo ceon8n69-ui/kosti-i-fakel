@@ -1,4 +1,4 @@
-import type { Face } from "@kf/schema";
+import type { DungeonDefinition, DungeonObjectType, Face } from "@kf/schema";
 import type { Draw } from "./rng.js";
 
 export type Attr = "STR" | "DEX" | "INT" | "SPI";
@@ -33,6 +33,8 @@ export interface Hero {
   plan: Assignment[];
   ready: boolean;
   taunt: boolean;
+  /** id постоянного героя в БД. */
+  dbId?: string;
 }
 
 export type IntentKind = "attack" | "block" | "doom" | "charge" | "summon" | "drain";
@@ -67,33 +69,75 @@ export interface Monster {
 
 export type ObjectState = "armed" | "revealed" | "disarmed" | "triggered";
 
-export interface RoomObject {
+/** Объект подземелья во время похода. Скрытые поля (dc, тайники) не уходят клиенту. */
+export interface RObject {
   id: string;
-  kind: "corridor" | "trap" | "door";
-  /** Скрытый объект не попадает в проекцию для игроков. */
+  type: DungeonObjectType;
+  x: number;
+  y: number;
   hidden: boolean;
+  /** Двери. */
+  open?: boolean;
+  locked?: boolean;
+  keyId?: string;
+  lockDc?: number;
+  secretDc?: number;
+  /** Ловушки. */
   trapId?: string;
   state?: ObjectState;
-  cells?: number;
+  /** Сундук открыт, рычаг потянут, ключ взят, NPC выслушан, костёр использован. */
+  used?: boolean;
+  textId?: string;
+  npcId?: string;
+  radius?: number;
+  variable?: string;
+}
+
+export interface EncounterState {
+  id: string;
+  done: boolean;
+  spotted: boolean;
+}
+
+export interface Bag {
+  keys: string[];
+  items: string[];
+  gold: number;
 }
 
 export interface SessionState {
-  v: 1;
+  v: 2;
   seq: number;
   rngCounter: number;
-  scenarioId: string;
+  dungeonId: string;
+  title: string;
+  tier: number;
   tutorial: boolean;
   phase: "explore" | "combat" | "ended";
   partySize: number;
   light: number;
-  torches: number;
   doom: number;
   heroes: Hero[];
   monsters: Monster[];
   round: number;
   step: "roll" | "plan" | null;
-  objects: RoomObject[];
-  encounter: string[];
+  /** Полное описание подземелья — только на сервере. */
+  def: DungeonDefinition;
+  tiles: string[];
+  /** Открытые клетки: '1' — видели. */
+  seen: string[];
+  pos: { x: number; y: number };
+  leaderId: string;
+  objects: RObject[];
+  encounters: EncounterState[];
+  encounterId: string | null;
+  vars: Record<string, number>;
+  ruleFired: Record<string, number>;
+  bag: Bag;
+  /** Сумма стоимости побеждённых монстров — для опыта. */
+  killed: number;
+  /** Последние тексты истории (видны всем). */
+  story: string[];
   nextId: number;
   ended: null | { reason: "victory" | "defeat" | "retreat" };
 }
@@ -107,8 +151,12 @@ interface Base {
 }
 
 export type Command =
-  | (Base & { type: "INTERACT"; heroId: string; objectId: string; verb: "inspect" | "disarm" })
-  | (Base & { type: "MOVE"; heroId: string; objectId: string })
+  | (Base & { type: "MOVE"; heroId: string; x: number; y: number })
+  | (Base & { type: "INTERACT"; heroId: string; objectId: string; verb: "use" | "force" | "disarm" })
+  | (Base & { type: "SEARCH"; heroId: string })
+  | (Base & { type: "REST"; heroId: string; objectId: string })
+  | (Base & { type: "RETREAT"; heroId: string })
+  | (Base & { type: "USE_ITEM"; heroId: string; itemId: string; targetId?: string })
   | (Base & { type: "CHANGE_ROW"; heroId: string; row: Row })
   | (Base & { type: "ROLL_DICE"; heroId: string })
   | (Base & { type: "REROLL"; heroId: string; dice: number[] })
@@ -129,13 +177,28 @@ type E<T extends string, P = object> = { seq: number; type: T; draws?: Draw[] } 
 
 export type GameEvent =
   | E<"SESSION_STARTED", { initial: SessionState; seedHash: string }>
+  | E<"SESSION_ENTERED">
   | E<"CHECK_ROLLED", { heroId: string; attr: Attr; dc: number; natural: number; mod: number; total: number; success: boolean; traj: number; purpose: string }>
-  | E<"TRAP_REVEALED", { objectId: string; trapId: string }>
+  | E<"TRAP_REVEALED", { objectId: string; trapId: string; x: number; y: number }>
   | E<"TRAP_DISARMED", { objectId: string }>
-  | E<"TRAP_TRIGGERED", { objectId: string; trapId: string }>
+  | E<"TRAP_TRIGGERED", { objectId: string; trapId: string; x: number; y: number }>
   | E<"ROW_CHANGED", { heroId: string; row: Row }>
-  | E<"PARTY_MOVED", { objectId: string; cells: number }>
-  | E<"ENCOUNTER_STARTED", { kinds: string[] }>
+  | E<"PARTY_MOVED", { path: [number, number][]; cost: number }>
+  | E<"TILE_REVEALED", { cells: [number, number, string][]; objects: VisibleObject[] }>
+  | E<"TILE_CHANGED", { cells: [number, number, string][] }>
+  | E<"OBJECT_CHANGED", { objectId: string; patch: Partial<RObject> }>
+  | E<"SECRET_FOUND", { object: VisibleObject }>
+  | E<"TEXT_SHOWN", { textId: string; text: string; speaker?: string }>
+  | E<"ITEM_FOUND", { objectId: string; gold: number; items: string[]; keys: string[] }>
+  | E<"ITEM_USED", { heroId: string; itemId: string; targetId?: string }>
+  | E<"VARIABLE_SET", { variable: string; value: number }>
+  | E<"RULE_FIRED", { ruleId: string }>
+  | E<"LEADER_CHANGED", { heroId: string }>
+  | E<"PARTY_RESTED", { objectId: string }>
+  | E<"ENCOUNTER_SPOTTED", { encounterId: string; kinds: string[]; x: number; y: number }>
+  | E<"ENCOUNTER_STARTED", { encounterId: string; kinds: string[] }>
+  | E<"ENCOUNTER_ENDED", { encounterId: string }>
+  | E<"REWARDS", { xp: number; gold: number; items: string[]; reason: "victory" | "defeat" | "retreat" }>
   | E<"MONSTER_SPAWNED", { monster: Monster; reason: "encounter" | "split" | "summon" }>
   | E<"ROUND_STARTED", { round: number }>
   | E<"INTENTS_SHOWN", { intents: Record<string, Intent[]> }>
@@ -170,4 +233,19 @@ export interface CommandResult {
   state: SessionState;
   events: GameEvent[];
   errors: CommandError[];
+}
+
+/** Объект в том виде, в каком его видит игрок: без dc и секретов. */
+export interface VisibleObject {
+  id: string;
+  type: DungeonObjectType;
+  x: number;
+  y: number;
+  open?: boolean;
+  locked?: boolean;
+  state?: ObjectState;
+  trapId?: string;
+  used?: boolean;
+  npcId?: string;
+  radius?: number;
 }

@@ -15,7 +15,8 @@
   "files": [
     "dist",
     "balance.json",
-    "scenarios"
+    "items.json",
+    "dungeons"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

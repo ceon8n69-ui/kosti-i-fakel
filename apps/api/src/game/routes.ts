@@ -6,7 +6,8 @@ import { z } from "zod";
 import { readSession } from "../auth/session.js";
 import type { Db } from "../db/client.js";
 import { users } from "../db/schema.js";
-import { ClientCommandSchema, CreateSessionSchema } from "./commandSchema.js";
+import { ClientCommandSchema, CreateHeroSchema, CreateSessionSchema } from "./commandSchema.js";
+import { createHero, goldBalance, heroView, listHeroes, officialCatalog } from "./progress.js";
 import { Hub, type HubClient } from "./hub.js";
 import type { GameService, SubmitResult } from "./service.js";
 
@@ -36,12 +37,32 @@ function ack(r: SubmitResult, commandId: string, viewerId: string) {
 export async function gameRoutes(app: FastifyInstance, d: GameRouteDeps): Promise<void> {
   const { game, hub } = d;
 
+  app.get("/heroes", { preHandler: d.requireSession }, async (req) => ({
+    heroes: (await listHeroes(d.db, req.session!.uid)).map(heroView),
+    gold: await goldBalance(d.db, req.session!.uid),
+  }));
+
+  app.post("/heroes", { preHandler: d.requireSession, config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (req, reply) => {
+    const body = CreateHeroSchema.safeParse(req.body ?? {});
+    if (!body.success) return reply.code(400).send({ error: "bad_request" });
+    const [u] = await d.db.select({ firstName: users.firstName }).from(users).where(eq(users.id, req.session!.uid));
+    const r = await createHero(d.db, req.session!.uid, body.data.classId, body.data.name ?? u?.firstName ?? "Герой");
+    if (r === "slots_full") return reply.code(409).send({ error: "slots_full" });
+    return heroView(r);
+  });
+
+  app.get("/dungeons", { preHandler: d.requireSession }, async (req) => ({ official: await officialCatalog(d.db, req.session!.uid) }));
+
   app.post("/sessions", { preHandler: d.requireSession, config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (req, reply) => {
     const body = CreateSessionSchema.safeParse(req.body ?? {});
     if (!body.success) return reply.code(400).send({ error: "bad_request" });
-    const [u] = await d.db.select({ firstName: users.firstName }).from(users).where(eq(users.id, req.session!.uid));
-    const id = await game.create(req.session!.uid, { classId: body.data.classId, name: body.data.name ?? u?.firstName ?? "Герой" });
-    return { sessionId: id };
+    const uid = req.session!.uid;
+    const dungeon = (await officialCatalog(d.db, uid)).find((x) => x.id === body.data.dungeonId);
+    if (!dungeon) return reply.code(404).send({ error: "no_dungeon" });
+    if (!dungeon.unlocked) return reply.code(403).send({ error: "locked" });
+    const r = await game.create(uid, body.data.heroId, body.data.dungeonId);
+    if ("error" in r) return reply.code(409).send({ error: r.error });
+    return { sessionId: r.id };
   });
 
   app.get("/sessions/active", { preHandler: d.requireSession }, async (req) => ({

@@ -1,22 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { project, projectEvent } from "./project.js";
+import { projectEvent, project } from "./project.js";
 import { replay } from "./reducer.js";
 import { valueAt } from "./rng.js";
 import { Table } from "./testkit.js";
-import type { GameEvent } from "./types.js";
 
-/** Зерно, у которого первый d20 даёт нужное значение. */
-function seedWithFirstD20(n: number): string {
-  for (let i = 0; i < 100000; i++) {
-    const seed = i.toString(16).padStart(16, "0");
-    if (valueAt(seed, 0, 20) + 1 === n) return seed;
-  }
-  throw new Error("no seed");
-}
 
 const enterCombat = (t: Table) => {
-  if (t.state.encounter.length === 2) t.patch((s) => (s.encounter = ["rat_swarm", "skeleton_guard", "rotten_archer"]));
-  t.ok({ type: "MOVE", heroId: "h1", objectId: "door_1" });
+  t.ok({ type: "MOVE", heroId: "h1", x: 3, y: 2 });
   return t;
 };
 
@@ -28,55 +18,26 @@ const setRoll = (t: Table, faces: number[], heroId = "h1") =>
     s.step = "plan";
   });
 
-describe("старт и исследование", () => {
+describe("вход в бой", () => {
   it("журнал начинается с SESSION_STARTED, зерна в нём нет", () => {
     const t = new Table("1234567890abcdef");
     expect(t.events[0]!.type).toBe("SESSION_STARTED");
     expect(JSON.stringify(t.events)).not.toContain("1234567890abcdef");
     expect(t.state.light).toBe(40);
-    expect(t.state.heroes[0]!.hp).toBe(16);
   });
 
-  it("натуральная 20 — всегда успех и находит ловушку", () => {
-    const t = new Table(seedWithFirstD20(20));
-    const ev = t.ok({ type: "INTERACT", heroId: "h1", objectId: "corridor", verb: "inspect" });
-    const check = ev.find((e) => e.type === "CHECK_ROLLED")!;
-    expect(check).toMatchObject({ natural: 20, success: true });
-    expect(t.types(ev)).toContain("TRAP_REVEALED");
-    expect(t.state.light).toBe(39);
-  });
-
-  it("натуральная 1 — всегда провал, даже при высоком бонусе", () => {
-    const t = new Table(seedWithFirstD20(1), [{ ownerId: "u1", classId: "sorcerer", name: "Ия" }]);
-    t.patch((s) => (s.heroes[0]!.stats.INT = 30));
-    const ev = t.ok({ type: "INTERACT", heroId: "h1", objectId: "corridor", verb: "inspect" });
-    expect(ev.find((e) => e.type === "CHECK_ROLLED")).toMatchObject({ natural: 1, success: false });
-    expect(t.types(ev)).not.toContain("TRAP_REVEALED");
-  });
-
-  it("скрытая ловушка не видна в проекции, пока не найдена", () => {
+  it("вход в зону столкновения начинает бой с масштабом здоровья", () => {
     const t = new Table();
-    expect(project(t.state, "u1").objects.map((o) => o.id)).not.toContain("trap_1");
-    const start = projectEvent(t.events[0]!, "u1") as Extract<GameEvent, { type: "SESSION_STARTED" }>;
-    expect(start.initial.objects.map((o) => o.id)).not.toContain("trap_1");
-    expect(project(t.state, "u1")).not.toHaveProperty("rngCounter");
-  });
-
-  it("проход мимо невзведённой ловушки запускает её, затем бой с масштабом здоровья", () => {
-    const t = new Table();
-    t.patch((s) => (s.encounter = ["rat_swarm", "skeleton_guard", "rotten_archer"]));
-    const ev = t.ok({ type: "MOVE", heroId: "h1", objectId: "door_1" });
-    expect(t.types(ev)).toEqual(expect.arrayContaining(["TRAP_TRIGGERED", "ENCOUNTER_STARTED", "ROUND_STARTED", "INTENTS_SHOWN"]));
-    expect(t.state.heroes[0]!.hp).toBe(14);
+    const ev = t.ok({ type: "MOVE", heroId: "h1", x: 3, y: 2 });
+    expect(t.types(ev)).toEqual(expect.arrayContaining(["PARTY_MOVED", "ENCOUNTER_STARTED", "ROUND_STARTED", "INTENTS_SHOWN"]));
     // Рой 5×0,45, скелет 10×0,45, лучник 7×0,45
     expect(t.state.monsters.map((m) => m.maxHp)).toEqual([2, 5, 3]);
     expect(t.state.phase).toBe("combat");
-    expect(t.state.light).toBe(39);
   });
 
-  it("чужим героем ходить нельзя, устаревший seq отклоняется", () => {
+  it("чужим героем ходить нельзя", () => {
     const t = new Table();
-    expect(t.run({ type: "MOVE", heroId: "h1", objectId: "door_1" }, "intruder").errors[0]!.code).toBe("not_your_hero");
+    expect(t.run({ type: "MOVE", heroId: "h1", x: 3, y: 2 }, "intruder").errors[0]!.code).toBe("not_your_hero");
   });
 });
 
@@ -199,7 +160,7 @@ describe("раунд", () => {
 
   it("слизень при смерти делится на двух", () => {
     const t = new Table();
-    t.patch((s) => (s.encounter = ["slime"]));
+    t.patch((s) => (s.def.encounters[0]!.monsters = ["slime"]));
     enterCombat(t);
     t.patch((s) => (s.monsters[0]!.hp = 1));
     setRoll(t, [0, 5, 5]);
@@ -226,14 +187,21 @@ describe("раунд", () => {
     expect(t.state.monsters.find((m) => m.id === "m3")).toMatchObject({ hp: 27, poison: 0 });
   });
 
-  it("победа завершает поход", () => {
+  it("победа в стычке возвращает к исследованию", () => {
     const t = enterCombat(new Table("00000000000000aa", [{ ownerId: "u1", classId: "sorcerer", name: "Ия" }]));
     t.patch((s) => s.monsters.forEach((m) => (m.hp = 1)));
     setRoll(t, [5, 0, 5]); // И1 всем
     t.ok({ type: "ASSIGN_FACE", heroId: "h1", die: 1, target: null });
     const ev = t.ok({ type: "READY", heroId: "h1", ready: true });
-    expect(ev.at(-1)).toMatchObject({ type: "SESSION_ENDED", reason: "victory" });
-    expect(t.run({ type: "ROLL_DICE", heroId: "h1" }).errors[0]!.code).toBe("session_ended");
+    expect(t.types(ev)).toContain("ENCOUNTER_ENDED");
+    expect(t.state.phase).toBe("explore");
+    expect(t.state.monsters).toEqual([]);
+    expect(t.run({ type: "ROLL_DICE", heroId: "h1" }).errors[0]!.code).toBe("wrong_phase");
+    // Сокровищница рядом — поход завершается победой с наградой.
+    t.ok({ type: "MOVE", heroId: "h1", x: 5, y: 2 });
+    const end = t.ok({ type: "INTERACT", heroId: "h1", objectId: "treasury", verb: "use" });
+    expect(end.find((e) => e.type === "REWARDS")).toMatchObject({ reason: "victory" });
+    expect(end.at(-1)).toMatchObject({ type: "SESSION_ENDED", reason: "victory" });
   });
 
   it("в обучении поражение не убивает героя", () => {
@@ -285,7 +253,7 @@ describe("раунд", () => {
 
   it("состояние восстанавливается из журнала", () => {
     const t = new Table();
-    t.ok({ type: "MOVE", heroId: "h1", objectId: "door_1" });
+    t.ok({ type: "MOVE", heroId: "h1", x: 3, y: 2 });
     t.ok({ type: "ROLL_DICE", heroId: "h1" });
     expect(replay(t.events)).toEqual(t.state);
   });

@@ -66,3 +66,21 @@ body { font: 16px/1.4 Georgia, "Times New Roman", serif; overscroll-behavior: no
 .class-card span { font-size: 12px; color: var(--muted); }
 .class-card.sel { border-color: var(--fire); box-shadow: 0 0 0 1px var(--fire), 0 0 14px rgba(240,160,64,.35); }
 .card { gap: 10px; }
+.row-card { flex-direction: row; align-items: center; }
+.grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.gold { color: var(--fire); font-weight: bold; }
+.hero-card, .dungeon-card {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; min-height: 64px;
+  border-radius: 12px; border: 1px solid var(--edge); background: #1b130d; color: var(--ink); font: inherit;
+}
+.hero-card img { width: 44px; height: 66px; object-fit: contain; }
+.hero-card b, .dungeon-card b { font-size: 16px; }
+.hero-card span, .dungeon-card span { font-size: 12px; color: var(--muted); }
+.hero-card.sel, .dungeon-card.sel { border-color: var(--fire); box-shadow: 0 0 0 1px var(--fire); }
+.hero-card:disabled, .dungeon-card:disabled { opacity: .5; }
+.xp { height: 5px; border-radius: 3px; background: #2a1d13; overflow: hidden; margin-top: 3px; }
+.xp i { display: block; height: 100%; background: linear-gradient(90deg, #7d6bd6, #b79bff); }
+.dungeon-card .num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #2a1d13; color: var(--fire); font-weight: bold; flex: none; }
+.intro { font-size: 13px; color: var(--muted); margin: 4px 0; font-style: italic; text-align: left; }
+.err { color: #e0574a; font-size: 13px; margin: 0; }
+.btn-ghost { width: 100%; min-height: 48px; border-radius: 12px; border: 1px dashed var(--edge); background: transparent; color: var(--muted); font: inherit; font-size: 15px; }

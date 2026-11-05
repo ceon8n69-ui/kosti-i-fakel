@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "tavern_cellar",
+  "title": "Подвал таверны",
+  "tier": 1,
+  "tutorial": true,
+  "size": { "w": 16, "h": 12 },
+  "tiles": [
+    "################",
+    "#....#.........#",
+    "#....#.........#",
+    "#..............#",
+    "#....#.........#",
+    "###.############",
+    "#......#.......#",
+    "#......#.......#",
+    "#..............#",
+    "#......#.......#",
+    "#......#.......#",
+    "################"
+  ],
+  "objects": [
+    { "id": "entrance", "type": "entrance", "x": 2, "y": 2 },
+    { "id": "note_miron", "type": "note", "x": 3, "y": 1, "textId": "note_miron" },
+    { "id": "door_store", "type": "door", "x": 5, "y": 3 },
+    { "id": "trap_store", "type": "trap", "x": 9, "y": 3, "trapId": "arrow", "hidden": true },
+    { "id": "chest_store", "type": "chest", "x": 13, "y": 1, "loot": { "gold": 15, "items": ["potion"] } },
+    { "id": "barrels", "type": "note", "x": 13, "y": 4, "textId": "barrels" },
+    { "id": "key_crypt", "type": "key", "x": 1, "y": 10, "keyId": "crypt_key", "textId": "key_found" },
+    { "id": "door_crypt", "type": "door", "x": 7, "y": 8, "lock": { "keyId": "crypt_key", "dc": 14 } },
+    { "id": "treasury", "type": "treasury", "x": 13, "y": 9, "textId": "treasury" }
+  ],
+  "encounters": [
+    { "id": "wine_cellar", "zone": { "x": 1, "y": 7, "w": 6, "h": 4 }, "monsters": ["rat_swarm", "skeleton_guard"], "textId": "wine_cellar" },
+    { "id": "crypt_rats", "zone": { "x": 10, "y": 6, "w": 5, "h": 5 }, "monsters": ["rat_swarm", "rat_swarm"], "textId": "crypt_rats" }
+  ],
+  "npcs": [],
+  "rules": [
+    { "id": "enter_cellar", "event": { "on": "enter_zone", "zone": { "x": 3, "y": 5, "w": 1, "h": 1 } }, "actions": [{ "do": "show_text", "textId": "stairs_down" }], "limit": 1 }
+  ],
+  "variables": [],
+  "texts": {
+    "intro": "Трактирщик Мирон суёт тебе фонарь: «Крысы опять в подвале. И что-то гремит костями у бочек. Разберись — и мой тайник за бочками твой».",
+    "note_miron": "Записка Мирона: «Ключ от старой кладовой потерял внизу, у винных бочек. Если найдёшь — не пей моё вино».",
+    "barrels": "Пустые бочки пахнут кислым вином. На полу — следы маленьких лап. Много лап.",
+    "stairs_down": "Ступени уходят в темноту. Внизу что-то скребётся и щёлкает.",
+    "wine_cellar": "Из-за бочек выползает рой крыс, а за ним, скрипя, поднимается скелет в ржавой кольчуге.",
+    "key_found": "Под разбитой бочкой лежит тяжёлый ключ с биркой «кладовая».",
+    "crypt_rats": "Старая кладовая. Две крысиные стаи дерутся за мешок зерна — и оборачиваются к тебе.",
+    "treasury": "Тайник Мирона: монеты в глиняном горшке и бутыль настойки. Факел потрескивает. Первое подземелье пройдено."
+  }
+}

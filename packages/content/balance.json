@@ -108,7 +108,8 @@
  },
  "scars": {
   "max": 3,
-  "choices": 3
+  "choices": 3,
+  "total": 12
  },
  "partyHpScale": {
   "1": 0.45,
@@ -714,5 +715,19 @@
   "hero_slot": 100,
   "storyteller_scroll": null,
   "generated_comic": null
+ },
+ "rewards": {
+  "xpPerMonsterCost": 5,
+  "xpVictoryPerTier": 50,
+  "xpRetreatShare": 50
+ },
+ "explore": {
+  "searchRadius": 3,
+  "trapSpotAttr": "INT",
+  "adjacent": 1,
+  "maxPathCells": 80,
+  "startConsumables": [
+   "potion"
+  ]
  }
 }

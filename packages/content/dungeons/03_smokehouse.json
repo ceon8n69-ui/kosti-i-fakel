@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "smokehouse",
+  "title": "Коптильня",
+  "tier": 1,
+  "tutorial": true,
+  "size": { "w": 18, "h": 12 },
+  "tiles": [
+    "##################",
+    "#................#",
+    "################.#",
+    "#................#",
+    "#.################",
+    "#................#",
+    "################.#",
+    "#......#.........#",
+    "#......#.........#",
+    "#................#",
+    "#......#.........#",
+    "##################"
+  ],
+  "objects": [
+    { "id": "entrance", "type": "entrance", "x": 1, "y": 1 },
+    { "id": "note_smoke", "type": "note", "x": 4, "y": 1, "textId": "note_smoke" },
+    { "id": "trap_gas", "type": "trap", "x": 12, "y": 3, "trapId": "gas", "hidden": true },
+    { "id": "campfire", "type": "campfire", "x": 2, "y": 5 },
+    { "id": "chest_hooks", "type": "chest", "x": 15, "y": 5, "loot": { "gold": 10, "items": ["torch", "return_scroll"] } },
+    { "id": "door_store", "type": "door", "x": 7, "y": 9, "lock": { "dc": 13 } },
+    { "id": "treasury", "type": "treasury", "x": 2, "y": 8, "textId": "treasury" }
+  ],
+  "encounters": [
+    { "id": "smoke_shades", "zone": { "x": 5, "y": 3, "w": 4, "h": 1 }, "monsters": ["shade"], "textId": "shades" },
+    { "id": "smokers", "zone": { "x": 8, "y": 7, "w": 9, "h": 4 }, "monsters": ["cultist", "rat_swarm"], "textId": "smokers" }
+  ],
+  "npcs": [],
+  "rules": [
+    { "id": "smoke_thickens", "event": { "on": "light_below", "value": 26 }, "actions": [{ "do": "show_text", "textId": "smoke" }], "limit": 1 },
+    { "id": "darkness_hunts", "event": { "on": "light_below", "value": 12 }, "actions": [{ "do": "show_text", "textId": "dark" }, { "do": "spawn", "monsters": ["shade"] }], "limit": 1 }
+  ],
+  "variables": [],
+  "texts": {
+    "intro": "Заброшенная коптильня у Бездны. Длинные дымные коридоры съедают свет. Здесь важен Факел: чем темнее, тем злее то, что живёт в дыму.",
+    "note_smoke": "Нацарапано углём: «Не задерживайся. Свет кончается быстрее, чем кажется. Если невмоготу — назад, к выходу. Живым».",
+    "smoke": "Дым густеет. Факел трещит и тускнеет — Сумрак. Проверки даются тяжелее.",
+    "dark": "Тьма. Из дыма выходит Тень — она идёт на угасающий свет.",
+    "shades": "Дым в коридоре сгущается в фигуру с бледными глазами.",
+    "smokers": "У коптильных крюков — культист в багровом. Он шепчет, и Рок вокруг тебя сгущается. У его ног кишат крысы.",
+    "treasury": "Кладовая коптильщиков: окорока давно истлели, но сундук с серебром цел. Коптильня пройдена."
+  }
+}

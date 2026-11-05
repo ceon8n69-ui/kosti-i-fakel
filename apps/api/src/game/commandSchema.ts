@@ -11,8 +11,12 @@ export const ClientCommandSchema = z.intersection(
     expectedSeq: z.number().int().nonnegative(),
   }),
   z.discriminatedUnion("type", [
-    z.object({ type: z.literal("INTERACT"), heroId: id, objectId: id, verb: z.enum(["inspect", "disarm"]) }),
-    z.object({ type: z.literal("MOVE"), heroId: id, objectId: id }),
+    z.object({ type: z.literal("MOVE"), heroId: id, x: z.number().int().min(0).max(31), y: z.number().int().min(0).max(31) }),
+    z.object({ type: z.literal("INTERACT"), heroId: id, objectId: id, verb: z.enum(["use", "force", "disarm"]) }),
+    z.object({ type: z.literal("SEARCH"), heroId: id }),
+    z.object({ type: z.literal("REST"), heroId: id, objectId: id }),
+    z.object({ type: z.literal("RETREAT"), heroId: id }),
+    z.object({ type: z.literal("USE_ITEM"), heroId: id, itemId: id, targetId: id.optional() }),
     z.object({ type: z.literal("CHANGE_ROW"), heroId: id, row: z.enum(["front", "back"]) }),
     z.object({ type: z.literal("ROLL_DICE"), heroId: id }),
     z.object({ type: z.literal("REROLL"), heroId: id, dice }),
@@ -29,7 +33,12 @@ export const ClientCommandSchema = z.intersection(
 );
 export type ClientCommand = z.infer<typeof ClientCommandSchema>;
 
-export const CreateSessionSchema = z.object({
+export const CreateHeroSchema = z.object({
   classId: z.enum(["guardian", "rogue", "sorcerer", "healer"]),
   name: z.string().trim().min(1).max(24).optional(),
+});
+
+export const CreateSessionSchema = z.object({
+  heroId: z.string().uuid(),
+  dungeonId: z.string().regex(/^[a-z0-9_]{1,32}$/),
 });

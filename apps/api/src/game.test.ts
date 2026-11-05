@@ -1,4 +1,4 @@
-import { autoTurn, verifyJournal, type CommandBody, type VisibleState } from "@kf/engine";
+import { botStep, verifyJournal, type CommandBody } from "@kf/engine";
 import { createHash, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -25,8 +25,14 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
   };
   const auth = (t: string) => ({ authorization: `Bearer ${t}` });
 
-  async function newSession(token: string, classId = "guardian") {
-    const r = await app.inject({ method: "POST", url: "/sessions", headers: auth(token), payload: { classId } });
+  async function newHero(token: string, classId = "guardian") {
+    const r = await app.inject({ method: "POST", url: "/heroes", headers: auth(token), payload: { classId } });
+    expect(r.statusCode).toBe(200);
+    return r.json().id as string;
+  }
+  async function newSession(token: string, classId = "guardian", dungeonId = "tavern_cellar") {
+    const heroId = await newHero(token, classId);
+    const r = await app.inject({ method: "POST", url: "/sessions", headers: auth(token), payload: { heroId, dungeonId } });
     expect(r.statusCode).toBe(200);
     return r.json().sessionId as string;
   }
@@ -43,7 +49,7 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     await app.ready();
   });
   beforeEach(async () => {
-    await db.execute(sql`truncate session_commands, session_snapshots, session_events, sessions, analytics_events, users restart identity cascade`);
+    await db.execute(sql`truncate gold_ledger, heroes, session_commands, session_snapshots, session_events, sessions, analytics_events, users restart identity cascade`);
     app.game.dropCache();
   });
   afterAll(async () => {
@@ -55,10 +61,12 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     const tok = await login(1);
     const id = await newSession(tok);
     const v = (await getState(tok, id)).json();
-    expect(v.seq).toBe(1);
+    expect(v.seq).toBeGreaterThan(1);
     expect(v.seed).toBeNull();
     expect(v.seedHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(v.state.objects.map((o: { id: string }) => o.id)).not.toContain("trap_1");
+    expect(v.state.objects.map((o: { id: string }) => o.id)).not.toContain("trap_store");
+    expect(v.state).not.toHaveProperty("def");
+    expect(v.state.story[0]).toContain("Мирон");
     expect(v.state).not.toHaveProperty("rngCounter");
     expect((await app.inject({ method: "GET", url: "/sessions/active", headers: auth(tok) })).json().sessionId).toBe(id);
   });
@@ -68,75 +76,97 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     const b = await login(2);
     const id = await newSession(a);
     expect((await getState(b, id)).statusCode).toBe(404);
-    expect((await send(b, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, 1)).statusCode).toBe(403);
+    expect((await send(b, id, { type: "MOVE", heroId: "h1", x: 3, y: 3 }, 1)).statusCode).toBe(403);
   });
 
   it("idempotency по commandId и проверка expectedSeq", async () => {
     const tok = await login(1);
     const id = await newSession(tok);
     const cid = randomUUID();
-    const r1 = await send(tok, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, 1, cid);
+    const seq0 = (await getState(tok, id)).json().seq;
+    const r1 = await send(tok, id, { type: "MOVE", heroId: "h1", x: 4, y: 3 }, seq0, cid);
     expect(r1.statusCode).toBe(200);
-    const r2 = await send(tok, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, 1, cid);
+    const r2 = await send(tok, id, { type: "MOVE", heroId: "h1", x: 4, y: 3 }, seq0, cid);
     expect(r2.json().duplicate).toBe(true);
     expect(r2.json().events).toEqual(r1.json().events);
-    const stale = await send(tok, id, { type: "ROLL_DICE", heroId: "h1" }, 1);
+    const stale = await send(tok, id, { type: "SEARCH", heroId: "h1" }, seq0);
     expect(stale.statusCode).toBe(409);
     expect(stale.json()).toMatchObject({ error: "stale_seq", seq: r1.json().seq });
-    const bad = await send(tok, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, r1.json().seq);
+    const bad = await send(tok, id, { type: "MOVE", heroId: "h1", x: 12, y: 2 }, r1.json().seq);
     expect(bad.statusCode).toBe(422);
   });
 
-  it("полный бой: снимки, восстановление из журнала после рестарта, проверка зерна", async () => {
+  it("полный поход: снимки, награды, восстановление из журнала после рестарта, проверка зерна", async () => {
     const tok = await login(1);
     const id = await newSession(tok, "sorcerer");
-    let v = (await getState(tok, id)).json() as { seq: number; state: VisibleState };
-    let seq = (await send(tok, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, v.seq)).json().seq as number;
+    let seq = (await getState(tok, id)).json().seq as number;
     const latencies: number[] = [];
-    for (let guard = 0; guard < 300; guard++) {
-      v = (await getState(tok, id)).json();
-      if (v.state.phase === "ended") break;
-      // autoTurn работает с полным состоянием; для своего героя проекция совпадает с ним.
-      const cmds = autoTurn(v.state as never, "h1");
-      for (const c of cmds) {
-        const t0 = performance.now();
-        const r = await send(tok, id, c, seq);
-        latencies.push(performance.now() - t0);
-        expect(r.statusCode).toBe(200);
-        seq = r.json().seq;
-        if (r.json().state.phase === "ended") break;
-      }
+    const memo = { searches: new Set<string>() };
+    for (let guard = 0; guard < 1500; guard++) {
+      const full = await app.game.fullState(id);
+      if (!full || full.phase === "ended") break;
+      const c = botStep(full, "h1", memo);
+      if (!c) break;
+      const t0 = performance.now();
+      const r = await send(tok, id, c, seq);
+      latencies.push(performance.now() - t0);
+      expect(r.statusCode, JSON.stringify(r.json())).toBe(200);
+      seq = r.json().seq;
     }
     const end = (await getState(tok, id)).json();
     expect(end.state.phase).toBe("ended");
     expect(end.seed).toMatch(/^[0-9a-f]{16}$/);
     expect(createHash("sha256").update(end.seed).digest("hex")).toBe(end.seedHash);
 
+    // Награды: опыт герою, золото через журнал, герой свободен.
+    const hs = (await app.inject({ method: "GET", url: "/heroes", headers: auth(tok) })).json();
+    expect(hs.heroes[0].status).toBe("alive");
+    if (end.state.ended.reason === "victory") {
+      expect(hs.heroes[0].level * 1000 + hs.heroes[0].xp).toBeGreaterThan(1000);
+      expect(hs.gold).toBeGreaterThan(0);
+      const sum = await db.execute(sql`select coalesce(sum(delta),0)::int as n from gold_ledger`);
+      expect(sum[0]!.n).toBe(0); // сумма по транзакциям сходится
+      const cat = (await app.inject({ method: "GET", url: "/dungeons", headers: auth(tok) })).json().official;
+      expect(cat[0]).toMatchObject({ cleared: true });
+      expect(cat[1]).toMatchObject({ unlocked: true });
+    }
+
     const snaps = await db.execute(sql`select count(*)::int as n from session_snapshots where session_id = ${id}`);
     expect(snaps[0]!.n).toBeGreaterThan(0);
-
-    // «Рестарт»: кэш сброшен, состояние собирается из снимка + хвоста и совпадает с чистым журналом.
-    const before = app.game["cache"].get(id);
+    const before = await app.game.fullState(id);
     app.game.dropCache();
-    const fromJournal = await app.game.rebuildFromJournal(id);
-    expect(fromJournal).toEqual(before);
-    const again = (await getState(tok, id)).json();
-    expect(again.state).toEqual(end.state);
-
+    expect(await app.game.rebuildFromJournal(id)).toEqual(before);
+    expect((await getState(tok, id)).json().state).toEqual(end.state);
     const all = (await getState(tok, id, 0)).json();
     expect(verifyJournal(end.seed, all.events).ok).toBe(true);
 
     latencies.sort((a, b) => a - b);
-    const p95 = latencies[Math.floor(latencies.length * 0.95)]!;
-    expect(p95).toBeLessThan(150);
+    expect(latencies[Math.floor(latencies.length * 0.95)]!).toBeLessThan(150);
+  });
+
+  it("обучение открывается по порядку, герой не может быть в двух походах", async () => {
+    const tok = await login(1);
+    const heroId = await newHero(tok);
+    const locked = await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, dungeonId: "damp_well" } });
+    expect(locked.statusCode).toBe(403);
+    expect((await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, dungeonId: "tavern_cellar" } })).statusCode).toBe(200);
+    const busy = await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, dungeonId: "tavern_cellar" } });
+    expect(busy.json()).toMatchObject({ error: "hero_busy" });
+  });
+
+  it("не больше трёх героев", async () => {
+    const tok = await login(1);
+    for (let i = 0; i < 3; i++) await newHero(tok);
+    expect((await app.inject({ method: "POST", url: "/heroes", headers: auth(tok), payload: { classId: "rogue" } })).statusCode).toBe(409);
   });
 
   it("переподключение: sinceSeq отдаёт только пропущенные события", async () => {
     const tok = await login(1);
     const id = await newSession(tok);
-    const r = await send(tok, id, { type: "MOVE", heroId: "h1", objectId: "door_1" }, 1);
-    const tail = (await getState(tok, id, 1)).json();
-    expect(tail.events[0].seq).toBe(2);
+    const seq0 = (await getState(tok, id)).json().seq;
+    const r = await send(tok, id, { type: "MOVE", heroId: "h1", x: 4, y: 3 }, seq0);
+    const tail = (await getState(tok, id, seq0)).json();
+    expect(tail.events[0].seq).toBe(seq0 + 1);
     expect(tail.events.at(-1).seq).toBe(r.json().seq);
     expect((await getState(tok, id, r.json().seq)).json().events).toEqual([]);
   });
@@ -163,12 +193,12 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     await waitFor("authed");
     ws.send(JSON.stringify({ t: "sub", sessionId: id, sinceSeq: 0 }));
     const sync = await waitFor("sync");
-    expect(sync.seq).toBe(1);
-    ws.send(JSON.stringify({ t: "cmd", sessionId: id, command: { type: "MOVE", heroId: "h1", objectId: "door_1", commandId: randomUUID(), expectedSeq: 1 } }));
+    const seq0 = sync.seq as number;
+    ws.send(JSON.stringify({ t: "cmd", sessionId: id, command: { type: "MOVE", heroId: "h1", x: 4, y: 3, commandId: randomUUID(), expectedSeq: seq0 } }));
     const ackMsg = await waitFor("ack");
     expect(ackMsg.ok).toBe(true);
     const pushed = await waitFor("events");
-    expect((pushed.events as unknown[]).length).toBeGreaterThan(3);
+    expect((pushed.events as unknown[]).length).toBeGreaterThan(0);
     ws.terminate();
   });
 

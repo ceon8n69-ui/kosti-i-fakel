@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
   applyCommand,
+  openSession,
   project,
   projectEvent,
   replay,
@@ -13,11 +14,12 @@ import {
 } from "@kf/engine";
 import { and, asc, desc, eq, gt, lte, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
-import { sessionCommands, sessionEvents, sessions, sessionSnapshots } from "../db/schema.js";
+import { heroes, sessionCommands, sessionEvents, sessions, sessionSnapshots } from "../db/schema.js";
+import { applyResults, type Reward } from "./progress.js";
+import { balance, dungeonById } from "@kf/content";
 import type { ClientCommand } from "./commandSchema.js";
 
 export const SNAPSHOT_EVERY = 20;
-const SLICE_SCENARIO = "slice_cellar";
 
 export interface SessionView {
   sessionId: string;
@@ -55,22 +57,41 @@ export class GameService {
 
   constructor(private db: Db) {}
 
-  async create(ownerId: string, hero: { classId: string; name: string }): Promise<string> {
+  /** Новый поход: герой переходит в статус in_session, журнал открывается вступлением. */
+  async create(ownerId: string, heroId: string, dungeonId: string): Promise<{ id: string } | { error: string }> {
     const seed = randomBytes(8).toString("hex");
     const seedHash = createHash("sha256").update(seed).digest("hex");
-    const first = startSession({
-      scenarioId: SLICE_SCENARIO,
-      seedHash,
-      heroes: [{ ownerId, classId: hero.classId, name: hero.name }],
-    });
     return this.db.transaction(async (tx) => {
+      const locked = await tx.execute(sql`select * from heroes where id = ${heroId} and user_id = ${ownerId} for update`);
+      const h = locked[0] as { id: string; class: string; name: string; level: number; max_hp: number; status: string; consumables_json: string[] } | undefined;
+      if (!h) return { error: "no_hero" };
+      if (h.status !== "alive") return { error: h.status === "in_session" ? "hero_busy" : "hero_dead" };
+      // Герой не может войти в подземелье уровнем ниже своего (ТЗ 5.5).
+      const def = dungeonById(dungeonId);
+      const tier = balance.tiers.find((t) => t.tier === def?.tier);
+      if (!def || !tier) return { error: "no_dungeon" };
+      if (h.level > tier.heroLevels[1]) return { error: "tier_too_low" };
+      const first = startSession({
+        dungeonId,
+        seedHash,
+        heroes: [{ ownerId, classId: h.class, name: h.name, dbId: h.id, level: h.level, maxHp: h.max_hp, consumables: h.consumables_json }],
+      });
+      const events = openSession(first, new Rng(seed, 0));
+      const last = events[events.length - 1]!;
       const [row] = await tx
         .insert(sessions)
-        .values({ ownerId, scenarioId: SLICE_SCENARIO, seed, seedHash, seq: first.seq })
+        .values({ ownerId, scenarioId: dungeonId, seed, seedHash, seq: last.seq, heroIds: [h.id] })
         .returning({ id: sessions.id });
-      await tx.insert(sessionEvents).values({ sessionId: row!.id, seq: first.seq, type: first.type, payload: toPayload(first), actorId: ownerId });
-      return row!.id;
+      await tx.insert(sessionEvents).values(events.map((e) => ({ sessionId: row!.id, seq: e.seq, type: e.type, payload: toPayload(e), actorId: ownerId })));
+      await tx.update(heroes).set({ status: "in_session" }).where(eq(heroes.id, h.id));
+      return { id: row!.id };
     });
+  }
+
+  /** Полное состояние (с описанием подземелья) — только для тестов и симуляции на сервере. */
+  async fullState(sessionId: string): Promise<SessionState | null> {
+    const [s] = await this.db.select().from(sessions).where(eq(sessions.id, sessionId));
+    return s ? this.load(this.db, sessionId, s.seq) : null;
   }
 
   async latestActive(ownerId: string): Promise<string | null> {
@@ -187,6 +208,10 @@ export class GameService {
           ...(ended ? { state: "ended", endedReason: r.state.ended?.reason ?? null, endedAt: new Date() } : {}),
         })
         .where(eq(sessions.id, sessionId));
+      if (ended) {
+        const rw = r.events.find((e) => e.type === "REWARDS") as (Reward & { type: string }) | undefined;
+        await applyResults(tx, sessionId, r.state, rw ?? { xp: 0, gold: 0, items: [], reason: r.state.ended?.reason ?? "defeat" });
+      }
       if (Math.floor(row.seq / SNAPSHOT_EVERY) !== Math.floor(newSeq / SNAPSHOT_EVERY) || ended)
         await tx.insert(sessionSnapshots).values({ sessionId, seq: newSeq, state: r.state as unknown as Record<string, unknown> });
 

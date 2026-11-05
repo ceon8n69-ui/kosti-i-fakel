@@ -3,7 +3,7 @@
  * Запуск: DATABASE_URL=... pnpm --filter @kf/api exec tsx scripts/load.ts 200
  */
 import { randomUUID } from "node:crypto";
-import { autoTurn } from "@kf/engine";
+import { botStep } from "@kf/engine";
 import { buildApp } from "../src/app.js";
 import { signInitData } from "../src/auth/initData.js";
 import { createDb, runMigrations } from "../src/db/client.js";
@@ -27,7 +27,8 @@ async function party(i: number) {
   const token = (await app.inject({ method: "POST", url: "/auth/telegram", payload: { initData }, remoteAddress })).json().token;
   const h = { authorization: `Bearer ${token}` };
   const cls = ["guardian", "rogue", "sorcerer", "healer"][i % 4];
-  const id = (await app.inject({ method: "POST", url: "/sessions", headers: h, payload: { classId: cls } })).json().sessionId;
+  const heroId = (await app.inject({ method: "POST", url: "/heroes", headers: h, payload: { classId: cls } })).json().id;
+  const id = (await app.inject({ method: "POST", url: "/sessions", headers: h, payload: { heroId, dungeonId: "tavern_cellar" } })).json().sessionId;
   let v = (await app.inject({ method: "GET", url: `/sessions/${id}/state`, headers: h })).json();
   let seq = v.seq;
   const cmd = async (c: object) => {
@@ -40,9 +41,12 @@ async function party(i: number) {
     seq = j.seq;
     v = { ...v, state: j.state };
   };
-  await cmd({ type: "MOVE", heroId: "h1", objectId: "door_1" });
-  while (v.state.phase !== "ended") for (const c of autoTurn(v.state, "h1")) {
-    if (v.state.phase === "ended") break;
+  const memo = { searches: new Set<string>() };
+  for (let g = 0; g < 2000; g++) {
+    const full = await app.game.fullState(id);
+    if (!full || full.phase === "ended") break;
+    const c = botStep(full, "h1", memo);
+    if (!c) break;
     await cmd(c);
   }
 }

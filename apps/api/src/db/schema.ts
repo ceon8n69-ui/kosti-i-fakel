@@ -40,7 +40,9 @@ export const sessions = pgTable(
     ownerId: uuid("owner_id")
       .notNull()
       .references(() => users.id),
+    /** id подземелья (официального или версии авторского). */
     scenarioId: text("scenario_id").notNull(),
+    heroIds: jsonb("hero_ids").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
     seedHash: text("seed_hash").notNull(),
     seed: text("seed").notNull(),
     seq: integer("seq").notNull(),
@@ -94,4 +96,46 @@ export const sessionCommands = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.sessionId, t.commandId] })],
+);
+
+// ───────── Этап 2: герои и золото ─────────
+
+export const heroes = pgTable(
+  "heroes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    classId: text("class").notNull(),
+    name: text("name").notNull(),
+    level: integer("level").notNull().default(1),
+    xp: integer("xp").notNull().default(0),
+    maxHp: integer("max_hp").notNull(),
+    stats: jsonb("stats").$type<Record<string, number>>().notNull(),
+    dice: jsonb("dice_json").$type<unknown[]>().notNull(),
+    scars: jsonb("scars_json").$type<unknown[]>().notNull().default(sql`'[]'::jsonb`),
+    relics: jsonb("relics_json").$type<unknown[]>().notNull().default(sql`'[]'::jsonb`),
+    consumables: jsonb("consumables_json").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    /** alive | in_session | dead */
+    status: text("status").notNull().default("alive"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("heroes_user_idx").on(t.userId)],
+);
+
+/** Все изменения золота — только через журнал; баланс = сумма delta. */
+export const goldLedger = pgTable(
+  "gold_ledger",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    transactionId: uuid("transaction_id").notNull(),
+    accountType: text("account_type").notNull(),
+    accountId: text("account_id").notNull(),
+    delta: integer("delta").notNull(),
+    reason: text("reason").notNull(),
+    sessionId: uuid("session_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("gold_ledger_account_idx").on(t.accountType, t.accountId)],
 );

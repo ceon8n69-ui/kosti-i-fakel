@@ -1,0 +1,718 @@
+{
+ "version": 1,
+ "checks": {
+  "dc": {
+   "easy": 8,
+   "normal": 12,
+   "hard": 16,
+   "nearlyImpossible": 20
+  },
+  "freeActionDc": {
+   "min": 8,
+   "max": 20
+  },
+  "freeActionMaxChars": 140,
+  "truthTextMaxChars": 80
+ },
+ "stats": {
+  "min": -1,
+  "max": 4
+ },
+ "combat": {
+  "diceCount": 3,
+  "freeRerolls": 1,
+  "passDiePerRound": 1,
+  "tripleSkullDamage": 2,
+  "targetRoundsPerEncounter": {
+   "min": 2.5,
+   "max": 3.5
+  }
+ },
+ "light": {
+  "start": 40,
+  "torches": 2,
+  "torchValue": 8,
+  "cost": {
+   "moveCellsPerUnit": 6,
+   "check": 1,
+   "combatRound": 1,
+   "rest": 5
+  },
+  "states": [
+   {
+    "id": "bright",
+    "min": 25,
+    "vision": 6,
+    "checkMod": 0,
+    "enemyDamageBonus": 0
+   },
+   {
+    "id": "dusk",
+    "min": 11,
+    "vision": 4,
+    "checkMod": -1,
+    "enemyDamageBonus": 0
+   },
+   {
+    "id": "dark",
+    "min": 1,
+    "vision": 2,
+    "checkMod": -2,
+    "enemyDamageBonus": 1
+   },
+   {
+    "id": "gloom",
+    "min": 0,
+    "vision": 2,
+    "checkMod": -2,
+    "enemyDamageBonus": 1
+   }
+  ],
+  "gloomShadowEveryActions": 2
+ },
+ "doom": {
+  "liveDmStart": 3,
+  "perLightSpent": 5,
+  "costs": {
+   "attackPlus": 1,
+   "rearmTrap": 2,
+   "reinforcement": 3,
+   "collapse": 5
+  },
+  "reinforcementBudget": 4,
+  "collapseLightLoss": 5,
+  "leftoverBossHpPerToken": 2,
+  "autoDmPriority": [
+   "reinforcement",
+   "attack_plus",
+   "rearm_trap",
+   "collapse"
+  ]
+ },
+ "deathSaves": {
+  "dc": 10,
+  "successes": 3,
+  "failures": 3
+ },
+ "rest": {
+  "healPercent": 50,
+  "maxCampfires": 2
+ },
+ "progression": {
+  "maxLevel": 10,
+  "xpPerLevelFactor": 100,
+  "hpBonusEvenLevels": 2,
+  "freeHeroSlots": 3,
+  "relicSlots": 2,
+  "consumableSlots": 4
+ },
+ "scars": {
+  "max": 3,
+  "choices": 3
+ },
+ "partyHpScale": {
+  "1": 0.45,
+  "2": 0.65,
+  "3": 0.85,
+  "4": 1
+ },
+ "tiers": [
+  {
+   "tier": 1,
+   "heroLevels": [
+    1,
+    3
+   ],
+   "budget": 40,
+   "maxPerRoom": 12,
+   "maxMap": 24,
+   "minHoard": 100
+  },
+  {
+   "tier": 2,
+   "heroLevels": [
+    4,
+    6
+   ],
+   "budget": 70,
+   "maxPerRoom": 20,
+   "maxMap": 24,
+   "minHoard": 300
+  },
+  {
+   "tier": 3,
+   "heroLevels": [
+    7,
+    10
+   ],
+   "budget": 110,
+   "maxPerRoom": 30,
+   "maxMap": 32,
+   "minHoard": 800
+  }
+ ],
+ "economy": {
+  "entryFeePercentOfHoard": 10,
+  "minEntryFee": 5,
+  "victoryHoardPercent": 25,
+  "commissionPercent": 5,
+  "rewardCooldownDays": 7,
+  "maxPairOutcomesPerWeek": 3
+ },
+ "timers": {
+  "liveTurnSec": 60,
+  "asyncTurnHoursOptions": [
+   4,
+   12,
+   24
+  ],
+  "asyncTurnHoursDefault": 12,
+  "liveDmJoinSec": 120,
+  "liveDmIdleSec": 60,
+  "llmTimeoutSec": 8
+ },
+ "builder": {
+  "maxRules": 30,
+  "maxVariables": 16,
+  "maxChainDepth": 8,
+  "defaultRuleFireLimit": 3,
+  "undoSteps": 50,
+  "simRuns": 200,
+  "minBotWinRatePercent": 2,
+  "freePublishedSlots": 2
+ },
+ "fallen": {
+  "maxPerDungeon": 5,
+  "powerCapMultiplier": 1.5,
+  "heirLevelPenalty": 2
+ },
+ "classes": [
+  {
+   "id": "guardian",
+   "hp": 16,
+   "stats": {
+    "STR": 3,
+    "DEX": 0,
+    "INT": -1,
+    "SPI": 1
+   },
+   "dice": [
+    [
+     {
+      "t": "M",
+      "n": 3
+     },
+     {
+      "t": "M",
+      "n": 3
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "B",
+      "n": 1
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "B",
+      "n": 3
+     },
+     {
+      "t": "B",
+      "n": 3
+     },
+     {
+      "t": "B",
+      "n": 2
+     },
+     {
+      "t": "B",
+      "n": 2
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "B",
+      "n": 2,
+      "taunt": true
+     },
+     {
+      "t": "B",
+      "n": 2,
+      "taunt": true
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "B",
+      "n": 1
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "rogue",
+   "hp": 11,
+   "stats": {
+    "STR": 0,
+    "DEX": 3,
+    "INT": 1,
+    "SPI": 0
+   },
+   "dice": [
+    [
+     {
+      "t": "L",
+      "n": 3
+     },
+     {
+      "t": "L",
+      "n": 3
+     },
+     {
+      "t": "L",
+      "n": 2
+     },
+     {
+      "t": "L",
+      "n": 2
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "M",
+      "n": 4
+     },
+     {
+      "t": "M",
+      "n": 3
+     },
+     {
+      "t": "M",
+      "n": 3
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "SKULL"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "L",
+      "n": 2,
+      "poison": 1
+     },
+     {
+      "t": "L",
+      "n": 1,
+      "poison": 1
+     },
+     {
+      "t": "B",
+      "n": 1
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "sorcerer",
+   "hp": 9,
+   "stats": {
+    "STR": -1,
+    "DEX": 1,
+    "INT": 3,
+    "SPI": 1
+   },
+   "dice": [
+    [
+     {
+      "t": "I",
+      "n": 3
+     },
+     {
+      "t": "I",
+      "n": 3
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "I",
+      "n": 1,
+      "all": true
+     },
+     {
+      "t": "I",
+      "n": 1,
+      "all": true
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "SKULL"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "B",
+      "n": 2
+     },
+     {
+      "t": "B",
+      "n": 1
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "H",
+      "n": 1
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "healer",
+   "hp": 12,
+   "stats": {
+    "STR": 0,
+    "DEX": 0,
+    "INT": 1,
+    "SPI": 3
+   },
+   "dice": [
+    [
+     {
+      "t": "H",
+      "n": 3
+     },
+     {
+      "t": "H",
+      "n": 3
+     },
+     {
+      "t": "H",
+      "n": 2
+     },
+     {
+      "t": "H",
+      "n": 2
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "B",
+      "n": 2
+     },
+     {
+      "t": "B",
+      "n": 2
+     },
+     {
+      "t": "H",
+      "n": 1
+     },
+     {
+      "t": "I",
+      "n": 2
+     },
+     {
+      "t": "I",
+      "n": 1
+     },
+     {
+      "t": "SKULL"
+     }
+    ],
+    [
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "M",
+      "n": 2
+     },
+     {
+      "t": "I",
+      "n": 1
+     },
+     {
+      "t": "H",
+      "n": 1
+     },
+     {
+      "t": "STAR"
+     },
+     {
+      "t": "SKULL"
+     }
+    ]
+   ]
+  }
+ ],
+ "monsters": [
+  {
+   "id": "rat_swarm",
+   "cost": 2,
+   "hp": 5,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "multi_hit",
+   "params": {
+    "damage": 1,
+    "targets": 2
+   }
+  },
+  {
+   "id": "skeleton_guard",
+   "cost": 4,
+   "hp": 10,
+   "armor": 1,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee",
+   "params": {
+    "damage": 3
+   }
+  },
+  {
+   "id": "rotten_archer",
+   "cost": 4,
+   "hp": 7,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "ranged",
+   "params": {
+    "damage": 2
+   }
+  },
+  {
+   "id": "slime",
+   "cost": 5,
+   "hp": 12,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee_split",
+   "params": {
+    "damage": 2,
+    "splitInto": 2,
+    "splitHp": 3
+   }
+  },
+  {
+   "id": "shade",
+   "cost": 5,
+   "hp": 8,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee_pierce",
+   "params": {
+    "damage": 2
+   }
+  },
+  {
+   "id": "cultist",
+   "cost": 6,
+   "hp": 8,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "support",
+   "params": {
+    "block": 3,
+    "doom": 1
+   }
+  },
+  {
+   "id": "rust_golem",
+   "cost": 9,
+   "hp": 24,
+   "armor": 2,
+   "row": "front",
+   "boss": false,
+   "behavior": "charge",
+   "params": {
+    "damage": 6,
+    "every": 2
+   }
+  },
+  {
+   "id": "rat_queen",
+   "cost": 15,
+   "hp": 45,
+   "armor": 1,
+   "row": "front",
+   "boss": true,
+   "behavior": "boss_summon",
+   "params": {
+    "damage": 4,
+    "every": 2
+   }
+  },
+  {
+   "id": "lamplighter",
+   "cost": 18,
+   "hp": 55,
+   "armor": 1,
+   "row": "back",
+   "boss": true,
+   "behavior": "boss_drain_light",
+   "params": {
+    "damage": 3,
+    "light": 3
+   }
+  }
+ ],
+ "traps": [
+  {
+   "id": "arrow",
+   "cost": 1,
+   "spot": "INT",
+   "disarm": "DEX",
+   "dc": 10,
+   "effect": "damage_random",
+   "params": {
+    "damage": 2
+   }
+  },
+  {
+   "id": "spikes",
+   "cost": 2,
+   "spot": "INT",
+   "disarm": "DEX",
+   "dc": 12,
+   "effect": "damage_leader",
+   "params": {
+    "damage": 3
+   }
+  },
+  {
+   "id": "pit",
+   "cost": 3,
+   "spot": "INT",
+   "disarm": "STR",
+   "dc": 12,
+   "effect": "damage_leader",
+   "params": {
+    "damage": 4
+   }
+  },
+  {
+   "id": "gas",
+   "cost": 3,
+   "spot": "INT",
+   "disarm": "INT",
+   "dc": 14,
+   "effect": "poison_all_light",
+   "params": {
+    "poison": 2,
+    "light": 3
+   }
+  },
+  {
+   "id": "collapse",
+   "cost": 4,
+   "spot": "INT",
+   "disarm": "STR",
+   "dc": 14,
+   "effect": "block_path",
+   "params": {}
+  }
+ ],
+ "shopStars": {
+  "dice_set": 75,
+  "hero_skin": 100,
+  "season_pass": 300,
+  "dungeon_theme": 250,
+  "dungeon_slot": 150,
+  "hero_slot": 100,
+  "storyteller_scroll": null,
+  "generated_comic": null
+ }
+}

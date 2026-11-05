@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kf
+          POSTGRES_PASSWORD: kf
+          POSTGRES_DB: kf_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U kf" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://kf:kf@localhost:5432/kf_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Migrations are in sync with schema
+        run: |
+          cd apps/api
+          DATABASE_URL=$TEST_DATABASE_URL pnpm exec drizzle-kit check
+      - name: Web bundle budget (450 KB gzip)
+        run: |
+          total=0
+          for f in apps/web/dist/assets/*.js; do total=$((total + $(gzip -c "$f" | wc -c))); done
+          echo "JS gzip: $total bytes"
+          test "$total" -le 460800

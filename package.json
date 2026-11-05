@@ -1,0 +1,25 @@
+{
+  "name": "kosti-i-fakel",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev:api": "pnpm --filter @kf/api dev",
+    "dev:web": "pnpm --filter @kf/web dev",
+    "dev:bot": "pnpm --filter @kf/bot dev",
+    "db:generate": "pnpm --filter @kf/api db:generate",
+    "db:migrate": "pnpm --filter @kf/api db:migrate",
+    "start": "pnpm --filter @kf/api start"
+  },
+  "devDependencies": {
+    "turbo": "2.5.8",
+    "typescript": "5.9.3",
+    "@types/node": "22.18.12",
+    "vitest": "3.2.4",
+    "tsx": "4.20.6"
+  }
+}

@@ -1,21 +1,108 @@
 {
   "version": 1,
-  "note": "Этапы 0–4: заглушки рисуются кодом. Финальный арт: укажите sprite (путь в public/) — логика не меняется.",
+  "note": "Арт подключается полем sprite (путь в public/). Если файла нет — рисуется заглушка кодом.",
   "miniatures": {
-    "guardian": { "sprite": null, "placeholder": { "color": "#c9a24a", "glyph": "Стр" } },
-    "rogue": { "sprite": null, "placeholder": { "color": "#5aa36b", "glyph": "Плт" } },
-    "sorcerer": { "sprite": null, "placeholder": { "color": "#7d6bd6", "glyph": "Чар" } },
-    "healer": { "sprite": null, "placeholder": { "color": "#d27a9c", "glyph": "Знх" } },
-    "rat_swarm": { "sprite": null, "placeholder": { "color": "#8a7a68", "glyph": "Рой" } },
-    "skeleton_guard": { "sprite": null, "placeholder": { "color": "#d8d2c0", "glyph": "Скл" } },
-    "rotten_archer": { "sprite": null, "placeholder": { "color": "#6f8a52", "glyph": "Лук" } },
-    "slime": { "sprite": null, "placeholder": { "color": "#59b39a", "glyph": "Слз" } },
-    "shade": { "sprite": null, "placeholder": { "color": "#4b4f6b", "glyph": "Тнь" } },
-    "cultist": { "sprite": null, "placeholder": { "color": "#9b3b3b", "glyph": "Клт" } },
-    "rust_golem": { "sprite": null, "placeholder": { "color": "#a8613a", "glyph": "Глм" } },
-    "rat_queen": { "sprite": null, "placeholder": { "color": "#a35b8c", "glyph": "Крл" } },
-    "lamplighter": { "sprite": null, "placeholder": { "color": "#e0a43a", "glyph": "Фнр" } }
+    "guardian": {
+      "sprite": "art/minis/guardian.png",
+      "placeholder": {
+        "color": "#c9a24a",
+        "glyph": "Стр"
+      }
+    },
+    "rogue": {
+      "sprite": "art/minis/rogue.png",
+      "placeholder": {
+        "color": "#5aa36b",
+        "glyph": "Плт"
+      }
+    },
+    "sorcerer": {
+      "sprite": "art/minis/sorcerer.png",
+      "placeholder": {
+        "color": "#7d6bd6",
+        "glyph": "Чар"
+      }
+    },
+    "healer": {
+      "sprite": "art/minis/healer.png",
+      "placeholder": {
+        "color": "#d27a9c",
+        "glyph": "Знх"
+      }
+    },
+    "rat_swarm": {
+      "sprite": "art/minis/rat_swarm.png",
+      "placeholder": {
+        "color": "#8a7a68",
+        "glyph": "Рой"
+      }
+    },
+    "skeleton_guard": {
+      "sprite": "art/minis/skeleton_guard.png",
+      "placeholder": {
+        "color": "#d8d2c0",
+        "glyph": "Скл"
+      }
+    },
+    "rotten_archer": {
+      "sprite": "art/minis/rotten_archer.png",
+      "placeholder": {
+        "color": "#6f8a52",
+        "glyph": "Лук"
+      }
+    },
+    "slime": {
+      "sprite": "art/minis/slime.png",
+      "placeholder": {
+        "color": "#59b39a",
+        "glyph": "Слз"
+      }
+    },
+    "shade": {
+      "sprite": "art/minis/shade.png",
+      "placeholder": {
+        "color": "#4b4f6b",
+        "glyph": "Тнь"
+      }
+    },
+    "cultist": {
+      "sprite": "art/minis/cultist.png",
+      "placeholder": {
+        "color": "#9b3b3b",
+        "glyph": "Клт"
+      }
+    },
+    "rust_golem": {
+      "sprite": "art/minis/rust_golem.png",
+      "placeholder": {
+        "color": "#a8613a",
+        "glyph": "Глм"
+      }
+    },
+    "rat_queen": {
+      "sprite": "art/minis/rat_queen.png",
+      "placeholder": {
+        "color": "#a35b8c",
+        "glyph": "Крл"
+      }
+    },
+    "lamplighter": {
+      "sprite": "art/minis/lamplighter.png",
+      "placeholder": {
+        "color": "#e0a43a",
+        "glyph": "Фнр"
+      }
+    }
   },
-  "table": { "texture": null },
-  "sounds": { "dice": null, "hit": null, "block": null, "death": null, "victory": null, "torch": null }
+  "table": {
+    "texture": null
+  },
+  "sounds": {
+    "dice": null,
+    "hit": null,
+    "block": null,
+    "death": null,
+    "victory": null,
+    "torch": null
+  }
 }

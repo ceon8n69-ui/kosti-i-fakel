@@ -1,0 +1,76 @@
+name: Generate art
+# Manual: generates miniature art with the OpenAI Images API and pushes it to a
+# branch art/run-<id> for review. Needs repository secret OPENAI_API_KEY.
+# Запуск: вручную (Actions → Generate art) или коммитом в tools/art-request.json на main.
+on:
+  push:
+    branches: [main]
+    paths: [tools/art-request.json]
+  workflow_dispatch:
+    inputs:
+      keys:
+        description: "Manifest keys, comma-separated (empty = all of the chosen kind)"
+        required: false
+        default: ""
+      kind:
+        description: "mini (empty = only the listed keys)"
+        required: false
+        default: ""
+      quality:
+        description: "low, medium or high"
+        required: false
+        default: "medium"
+      model:
+        description: "OpenAI image model"
+        required: false
+        default: "gpt-image-2.5-flare"
+permissions:
+  contents: write
+concurrency:
+  group: generate-art
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install pillow==11.3.0 requests==2.32.5
+      - name: Generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          KEYS: ${{ inputs.keys }}
+          KIND: ${{ inputs.kind }}
+          QUALITY: ${{ inputs.quality }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then echo "::error::Add repository secret OPENAI_API_KEY"; exit 1; fi
+          if [ "${{ github.event_name }}" = "push" ]; then
+            KEYS=$(jq -r '.keys // ""' tools/art-request.json)
+            KIND=$(jq -r '.kind // ""' tools/art-request.json)
+            QUALITY=$(jq -r '.quality // "medium"' tools/art-request.json)
+            MODEL=$(jq -r '.model // "gpt-image-2.5-flare"' tools/art-request.json)
+          fi
+          set -o pipefail
+          python tools/generate_art.py --keys "$KEYS" --kind "$KIND" --quality "$QUALITY" --model "$MODEL" | tee generate.log
+      - name: Push results to a review branch
+        if: always()
+        run: |
+          git config user.name "kosti-art-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -b "art/run-${{ github.run_id }}"
+          git add apps/web/public/art
+          if git diff --cached --quiet; then echo "No new files"; exit 0; fi
+          git commit -m "Generated art (run ${{ github.run_id }})"
+          git push origin "art/run-${{ github.run_id }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: art-source-${{ github.run_id }}
+          path: |
+            art-source/
+            generate.log
+          if-no-files-found: ignore
+          retention-days: 14

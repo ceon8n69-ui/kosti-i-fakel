@@ -303,13 +303,30 @@ export class Stage3D {
 
   // ───────── Миниатюры ─────────
 
-  private miniTexture(kind: string, height: number): THREE.Texture {
+  /** Готовый арт из манифеста; пока файл грузится или если его нет — заглушка, нарисованная кодом. */
+  private miniTexture(kind: string, height: number, mat?: THREE.MeshBasicMaterial): THREE.Texture {
     const entry = (manifest.miniatures as Record<string, { sprite: string | null; placeholder: { color: string; glyph: string } }>)[kind];
-    if (entry?.sprite) {
-      const t = new THREE.TextureLoader().load(entry.sprite);
-      t.colorSpace = THREE.SRGBColorSpace;
-      return t;
+    const placeholder = this.placeholderTexture(kind, height);
+    if (entry?.sprite && mat) {
+      new THREE.TextureLoader().load(
+        `${import.meta.env.BASE_URL}${entry.sprite}`,
+        (t) => {
+          t.colorSpace = THREE.SRGBColorSpace;
+          t.anisotropy = 4;
+          mat.map = t;
+          mat.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          /* файла нет — остаётся заглушка */
+        },
+      );
     }
+    return placeholder;
+  }
+
+  private placeholderTexture(kind: string, height: number): THREE.Texture {
+    const entry = (manifest.miniatures as Record<string, { placeholder: { color: string; glyph: string } }>)[kind];
     const color = entry?.placeholder.color ?? "#999";
     const glyph = entry?.placeholder.glyph ?? "?";
     return this.canvasTex(128, Math.round(128 * height), (c) => {
@@ -350,11 +367,13 @@ export class Stage3D {
 
   private createMini(v: UnitVis): Mini {
     const scale = v.boss ? 1.35 : v.small ? 0.7 : 1;
-    const height = (v.side === "hero" ? 1.05 : 0.95) * scale;
-    const width = 0.72 * scale;
+    // Пропорции совпадают с готовым артом 256×384.
+    const height = (v.side === "hero" ? 1.15 : 1.05) * scale;
+    const width = height / 1.5;
     const geo = new THREE.PlaneGeometry(width, height);
-    geo.translate(0, height / 2 + 0.07, 0);
-    const mat = new THREE.MeshBasicMaterial({ map: this.miniTexture(v.kind, height / width), transparent: true, alphaTest: 0.1 });
+    geo.translate(0, height / 2 + 0.06, 0);
+    const mat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.1 });
+    mat.map = this.miniTexture(v.kind, height / width, mat);
     const sprite = new THREE.Mesh(geo, mat);
     const pivot = new THREE.Group();
     pivot.add(sprite);

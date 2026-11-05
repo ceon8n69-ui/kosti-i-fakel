@@ -181,7 +181,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
         },
       });
       app.setNotFoundHandler((req, reply) => {
-        const api = ["/auth", "/me", "/sessions", "/ws", "/health", "/bot", "/assets"];
+        const api = ["/auth", "/me", "/sessions", "/ws", "/health", "/bot", "/assets", "/art"];
         if (req.method === "GET" && !api.some((p) => req.url.startsWith(p)))
           return reply.header("cache-control", "no-cache").sendFile("index.html");
         return reply.code(404).send({ error: "not_found" });

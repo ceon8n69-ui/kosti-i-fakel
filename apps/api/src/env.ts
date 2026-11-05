@@ -11,8 +11,8 @@ export const EnvSchema = z.object({
   BOT_TOKEN: z.string().min(20),
   /** Имя бота без @ — для прямых ссылок t.me/<bot>/<app>. */
   BOT_USERNAME: z.string().min(1),
-  /** Короткое имя Mini App, заданное в @BotFather (/newapp). */
-  MINI_APP_SHORT_NAME: z.string().min(1).default("play"),
+  /** Короткое имя Mini App из /newapp. Пусто — Main App бота (по умолчанию). */
+  MINI_APP_SHORT_NAME: z.string().default(""),
   /** Публичный https-адрес сервиса (Railway). Нужен для вебхука и кнопки web_app. */
   PUBLIC_URL: z.string().url().optional(),
   /** Секрет для подписи сессионных токенов, минимум 32 символа. */

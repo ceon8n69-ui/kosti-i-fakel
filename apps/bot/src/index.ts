@@ -5,6 +5,7 @@ import { t } from "./texts.js";
 export interface BotConfig {
   token: string;
   username: string;
+  /** Короткое имя Mini App из /newapp. Пусто — используется Main App бота (t.me/<bot>?startapp=). */
   appShortName: string;
   /** https-адрес Mini App. Если задан, в личке используется кнопка web_app. */
   webAppUrl?: string;
@@ -14,8 +15,13 @@ const START_PARAM_RE = /^(t|d|f|r)_[A-Za-z0-9_-]{1,60}$/;
 
 /** Прямая ссылка на Mini App. В группах только она: кнопки web_app там не работают. */
 export function directLink(cfg: Pick<BotConfig, "username" | "appShortName">, startParam?: string): string {
-  const base = `https://t.me/${cfg.username}/${cfg.appShortName}`;
-  return startParam && START_PARAM_RE.test(startParam) ? `${base}?startapp=${startParam}` : base;
+  const base = cfg.appShortName
+    ? `https://t.me/${cfg.username}/${cfg.appShortName}`
+    : `https://t.me/${cfg.username}`;
+  const sp = startParam && START_PARAM_RE.test(startParam) ? startParam : "";
+  // Для Main App параметр startapp обязателен (может быть пустым), иначе откроется чат с ботом.
+  if (!cfg.appShortName) return `${base}?startapp${sp ? `=${sp}` : ""}`;
+  return sp ? `${base}?startapp=${sp}` : base;
 }
 
 export function openButton(cfg: BotConfig, chatType: string | undefined, startParam?: string): InlineKeyboard {

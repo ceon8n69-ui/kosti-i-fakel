@@ -5,7 +5,7 @@ if (!token) throw new Error("BOT_TOKEN не задан");
 const bot = createBot({
   token,
   username: process.env.BOT_USERNAME ?? "",
-  appShortName: process.env.MINI_APP_SHORT_NAME ?? "play",
+  appShortName: process.env.MINI_APP_SHORT_NAME ?? "",
   webAppUrl: process.env.PUBLIC_URL,
 });
 await bot.api.deleteWebhook();

@@ -58,7 +58,7 @@ pnpm typecheck
 | `DATABASE_URL` | да | PostgreSQL |
 | `BOT_TOKEN` | да | Токен бота; им же проверяется `initData` |
 | `BOT_USERNAME` | да | Имя бота без `@` для ссылок `t.me/<bot>/<app>` |
-| `MINI_APP_SHORT_NAME` | нет, `play` | Короткое имя Mini App из `/newapp` |
+| `MINI_APP_SHORT_NAME` | нет, пусто | Пусто — Main App бота; иначе короткое имя из `/newapp` |
 | `SESSION_SECRET` | да | ≥ 32 символов, `openssl rand -hex 32` |
 | `PUBLIC_URL` | для вебхука | https-адрес сервиса |
 | `BOT_MODE` | нет, `off` | `webhook` на Railway, `polling` локально |
@@ -71,11 +71,11 @@ pnpm typecheck
 
 ## Деплой на Railway
 
-1. В @BotFather: создать бота, затем `/newapp` → указать короткое имя (например `play`) и URL `https://<сервис>.up.railway.app/`.
+1. В @BotFather: создать бота, затем Bot Settings → Main App → URL `https://<сервис>.up.railway.app/`, режим Fullscreen.
 2. Railway → New Project → Deploy from GitHub repo → этот репозиторий. Сборка идёт по `Dockerfile` (`railway.json`).
 3. Добавить PostgreSQL в проект, в переменных сервиса: `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
 4. Settings → Networking → Generate Domain. Этот адрес — `PUBLIC_URL`.
-5. Задать `BOT_TOKEN`, `BOT_USERNAME`, `MINI_APP_SHORT_NAME`, `SESSION_SECRET`, `WEBHOOK_SECRET`, `PUBLIC_URL`, `BOT_MODE=webhook`.
+5. Задать `BOT_TOKEN`, `BOT_USERNAME`, `SESSION_SECRET`, `WEBHOOK_SECRET`, `PUBLIC_URL`, `BOT_MODE=webhook`.
 6. Деплой. Healthcheck — `/health`. При старте API применяет миграции, ставит вебхук и список команд бота.
 
 ### Приёмка этапа 0

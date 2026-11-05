@@ -7,6 +7,11 @@ describe("ссылки на Mini App", () => {
   it("прямая ссылка с допустимым startapp", () => {
     expect(directLink(cfg, "d_abc123")).toBe("https://t.me/kostifakel_bot/play?startapp=d_abc123");
   });
+  it("Main App: ссылка без короткого имени", () => {
+    const m = { ...cfg, appShortName: "" };
+    expect(directLink(m, "t_abc")).toBe("https://t.me/kostifakel_bot?startapp=t_abc");
+    expect(directLink(m)).toBe("https://t.me/kostifakel_bot?startapp");
+  });
   it("мусорный параметр отбрасывается", () => {
     expect(directLink(cfg, "x_<script>")).toBe("https://t.me/kostifakel_bot/play");
   });

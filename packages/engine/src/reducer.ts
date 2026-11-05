@@ -8,7 +8,7 @@ import type { GameEvent, Hero, Monster, SessionState } from "./types.js";
  */
 export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
   if (ev.type === "SESSION_STARTED") {
-    const fresh = clone(ev.initial);
+    const fresh = upgradeState(clone(ev.initial));
     fresh.seq = ev.seq;
     return fresh;
   }
@@ -250,7 +250,7 @@ export function applyEvent(s: SessionState, ev: GameEvent): SessionState {
 
 /** Восстановление из журнала (опционально — от снимка). */
 export function replay(events: GameEvent[], from?: SessionState): SessionState {
-  let s = from ? clone(from) : (undefined as unknown as SessionState);
+  let s = from ? upgradeState(clone(from)) : (undefined as unknown as SessionState);
   for (const ev of events) {
     if (!s && ev.type !== "SESSION_STARTED") throw new Error("journal must start with SESSION_STARTED");
     s = reduceInPlace(s, ev);
@@ -282,4 +282,19 @@ export function monster(s: SessionState, id: string): Monster {
 }
 export function unit(s: SessionState, id: string): Hero | Monster {
   return s.heroes.find((x) => x.id === id) ?? monster(s, id);
+}
+
+/**
+ * Партии, начатые до появления снаряжения, союзников и биомов: их журнал и снимки
+ * не содержат новых полей. Дополняем значениями «как будто ничего нет» — поведение старых партий не меняется.
+ */
+export function upgradeState(s: SessionState): SessionState {
+  s.bonusXp ??= 0;
+  s.allies ??= [];
+  s.biome ??= "dungeon";
+  for (const h of s.heroes) {
+    h.equipment ??= [];
+    h.mods ??= { dmg: { M: 0, L: 0, I: 0 }, block: 0, healAfter: 0, rerolls: 0, poison: 0, light: 0 } as SessionState["heroes"][number]["mods"];
+  }
+  return s;
 }

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigint, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 /** Этап 0: только пользователи и аналитика. Остальные таблицы из ТЗ 12.1 добавляются на своих этапах. */
 export const users = pgTable("users", {
@@ -27,4 +27,71 @@ export const analyticsEvents = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("analytics_events_name_created_idx").on(t.name, t.createdAt)],
+);
+
+// ───────── Этап 1: партии и журнал событий ─────────
+
+/** Партия (поход). seed раскрывается только после окончания; до этого виден seed_hash. */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tableId: uuid("table_id"),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id),
+    scenarioId: text("scenario_id").notNull(),
+    seedHash: text("seed_hash").notNull(),
+    seed: text("seed").notNull(),
+    seq: integer("seq").notNull(),
+    state: text("state").notNull().default("active"),
+    endedReason: text("ended_reason"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+  },
+  (t) => [index("sessions_owner_state_idx").on(t.ownerId, t.state)],
+);
+
+export const sessionEvents = pgTable(
+  "session_events",
+  {
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    seq: integer("seq").notNull(),
+    type: text("type").notNull(),
+    payload: jsonb("payload_json").$type<Record<string, unknown>>().notNull(),
+    actorId: uuid("actor_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.seq] })],
+);
+
+export const sessionSnapshots = pgTable(
+  "session_snapshots",
+  {
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    seq: integer("seq").notNull(),
+    state: jsonb("state_json").$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.seq] })],
+);
+
+/** Обработанные команды: повтор того же commandId возвращает прежний результат. */
+export const sessionCommands = pgTable(
+  "session_commands",
+  {
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    commandId: text("command_id").notNull(),
+    actorId: uuid("actor_id").notNull(),
+    type: text("type").notNull(),
+    firstSeq: integer("first_seq").notNull(),
+    lastSeq: integer("last_seq").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.commandId] })],
 );

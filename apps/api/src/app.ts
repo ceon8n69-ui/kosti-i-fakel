@@ -11,6 +11,9 @@ import type { Db } from "./db/client.js";
 import { analyticsEvents, users } from "./db/schema.js";
 import type { Env } from "./env.js";
 import { pickLocale } from "./locale.js";
+import { Hub } from "./game/hub.js";
+import { gameRoutes } from "./game/routes.js";
+import { GameService } from "./game/service.js";
 
 export interface AppDeps {
   env: Env;
@@ -18,6 +21,8 @@ export interface AppDeps {
   /** Обработчик вебхука бота; подключается, если бот работает в режиме webhook. */
   botWebhook?: (update: unknown) => Promise<void>;
   now?: () => number;
+  game?: GameService;
+  hub?: Hub;
 }
 
 type UserRow = typeof users.$inferSelect;
@@ -42,6 +47,9 @@ declare module "fastify" {
   interface FastifyRequest {
     session?: SessionPayload;
   }
+  interface FastifyInstance {
+    game: GameService;
+  }
 }
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
@@ -57,7 +65,15 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     bodyLimit: 64 * 1024,
   });
 
-  await app.register(rateLimit, { global: false });
+  // Лимиты считаются по пользователю (подпись токена), а не по IP: игроки за одним NAT не мешают друг другу.
+  await app.register(rateLimit, {
+    global: false,
+    keyGenerator: (req) => {
+      const h = req.headers.authorization;
+      const s = h?.startsWith("Bearer ") ? readSession(h.slice(7), env.SESSION_SECRET, nowSec()) : null;
+      return s ? `u:${s.uid}` : `ip:${req.ip}`;
+    },
+  });
 
   app.get("/health", async () => {
     await db.execute(sql`select 1`);
@@ -139,6 +155,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     return toProfile(row);
   });
 
+  const game = deps.game ?? new GameService(db);
+  const hub = deps.hub ?? new Hub();
+  app.decorate("game", game);
+  await gameRoutes(app, { db, game, hub, secret: env.SESSION_SECRET, nowSec, requireSession });
+
   if (deps.botWebhook) {
     const hook = deps.botWebhook;
     app.post("/bot/webhook", async (req, reply) => {
@@ -152,9 +173,16 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   if (env.WEB_DIST) {
     const root = resolve(env.WEB_DIST);
     if (existsSync(root)) {
-      await app.register(fastifyStatic, { root, wildcard: false, maxAge: "1h" });
+      // Файлы ищутся на диске при каждом запросе; хешированные ассеты кэшируются надолго.
+      await app.register(fastifyStatic, {
+        root,
+        setHeaders: (res, path) => {
+          res.setHeader("cache-control", path.includes(`${"/"}assets${"/"}`) ? "public, max-age=31536000, immutable" : "no-cache");
+        },
+      });
       app.setNotFoundHandler((req, reply) => {
-        if (req.method === "GET" && !req.url.startsWith("/auth") && !req.url.startsWith("/me"))
+        const api = ["/auth", "/me", "/sessions", "/ws", "/health", "/bot", "/assets"];
+        if (req.method === "GET" && !api.some((p) => req.url.startsWith(p)))
           return reply.header("cache-control", "no-cache").sendFile("index.html");
         return reply.code(404).send({ error: "not_found" });
       });

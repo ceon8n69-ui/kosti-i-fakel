@@ -55,3 +55,14 @@ body { font: 16px/1.4 Georgia, "Times New Roman", serif; overscroll-behavior: no
   background: var(--fire); color: #1b0f05; font: inherit; font-size: 18px; font-weight: bold;
 }
 .btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; }
+.btn.wide { width: 100%; max-width: 420px; }
+.who { display: flex; align-items: center; gap: 12px; width: 100%; }
+.portrait.sm { width: 52px; height: 52px; font-size: 24px; flex: none; }
+.small-h { font-size: 18px; margin-bottom: 4px; }
+.classes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+.class-card { min-height: 84px; border-radius: 12px; border: 1px solid var(--edge); background: #1b130d; color: var(--ink); font: inherit; padding: 10px; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.class-card b { font-size: 16px; color: var(--fire); }
+.class-card span { font-size: 12px; color: var(--muted); }
+.class-card.sel { border-color: var(--fire); box-shadow: 0 0 0 1px var(--fire), 0 0 14px rgba(240,160,64,.35); }
+.card { gap: 10px; }

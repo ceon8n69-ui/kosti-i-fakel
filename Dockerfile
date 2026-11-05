@@ -4,6 +4,7 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY e2e/package.json ./e2e/package.json
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 RUN pnpm deploy --filter @kf/api --prod --legacy /out \

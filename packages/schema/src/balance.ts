@@ -139,3 +139,17 @@ export const BalanceSchema = z.object({
   shopStars: z.record(z.string(), int.positive().nullable()),
 });
 export type Balance = z.infer<typeof BalanceSchema>;
+
+/** Сценарий вертикального среза (этап 1). На этапе 2 заменяется DungeonDefinition. */
+export const ScenarioSchema = z.object({
+  id: z.string(),
+  tutorial: z.boolean(),
+  room: z.object({
+    id: z.string(),
+    corridor: z.object({ id: z.string(), cells: int.positive() }),
+    trap: z.object({ id: z.string(), trapId: z.string() }),
+    door: z.object({ id: z.string(), cells: int.positive() }),
+  }),
+  encounter: z.array(z.string()).min(1),
+});
+export type Scenario = z.infer<typeof ScenarioSchema>;

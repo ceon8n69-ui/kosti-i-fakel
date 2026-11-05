@@ -21,7 +21,9 @@
     "drizzle-orm": "0.44.7",
     "fastify": "5.6.1",
     "postgres": "3.4.7",
-    "zod": "4.1.12"
+    "zod": "4.1.12",
+    "@kf/engine": "workspace:*",
+    "@fastify/websocket": "11.2.0"
   },
   "devDependencies": {
     "drizzle-kit": "0.31.5"

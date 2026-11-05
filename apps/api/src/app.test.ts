@@ -81,3 +81,26 @@ describe.skipIf(!url)("API этапа 0 (PostgreSQL)", () => {
     expect((await app.inject({ method: "GET", url: "/health" })).json()).toEqual({ ok: true });
   });
 });
+
+describe("раздача Mini App", () => {
+  it("несуществующий ассет — 404, а не index.html; маршруты SPA — index.html", async () => {
+    const { mkdtempSync, writeFileSync, mkdirSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const dir = mkdtempSync(join(tmpdir(), "kf-web-"));
+    writeFileSync(join(dir, "index.html"), "<!doctype html><title>kf</title>");
+    mkdirSync(join(dir, "assets"));
+    const env = loadEnv({ NODE_ENV: "test", DATABASE_URL: "postgres://x:y@localhost:1/z", BOT_TOKEN: TOKEN, BOT_USERNAME: "b", SESSION_SECRET: "s".repeat(40), WEB_DIST: dir });
+    const { db, close } = createDb(env.DATABASE_URL);
+    const app = await buildApp({ env, db });
+    // файл появился после старта (пересборка) — должен отдаваться
+    writeFileSync(join(dir, "assets", "late.js"), "console.log(1)");
+    expect((await app.inject("/assets/late.js")).statusCode).toBe(200);
+    expect((await app.inject("/assets/missing.js")).statusCode).toBe(404);
+    const spa = await app.inject("/tavern");
+    expect(spa.statusCode).toBe(200);
+    expect(spa.body).toContain("<title>kf</title>");
+    await app.close();
+    await close();
+  });
+});

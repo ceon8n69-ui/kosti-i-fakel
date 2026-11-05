@@ -34,9 +34,21 @@ jobs:
         run: |
           cd apps/api
           DATABASE_URL=$TEST_DATABASE_URL pnpm exec drizzle-kit check
-      - name: Web bundle budget (450 KB gzip)
+      - name: First-load JS budget (450 KB gzip)
+        # Первая загрузка — входной чанк; сцена боя с Three.js грузится лениво.
         run: |
           total=0
-          for f in apps/web/dist/assets/*.js; do total=$((total + $(gzip -c "$f" | wc -c))); done
-          echo "JS gzip: $total bytes"
+          for f in apps/web/dist/assets/index-*.js; do total=$((total + $(gzip -c "$f" | wc -c))); done
+          echo "First-load JS gzip: $total bytes"
           test "$total" -le 460800
+      - name: Engine property tests stay deterministic
+        run: pnpm --filter @kf/engine test
+      - name: E2E (Playwright, имитация Telegram)
+        run: |
+          pnpm --filter @kf/e2e exec playwright install --with-deps chromium
+          pnpm --filter @kf/e2e e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results
+          path: e2e/test-results

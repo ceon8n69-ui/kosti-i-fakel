@@ -50,4 +50,4 @@ export function parseStartParam(
 export const ApiErrorSchema = z.object({ error: z.string(), message: z.string().optional() });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
-export { BalanceSchema, type Balance } from "./balance.js";
+export { BalanceSchema, ScenarioSchema, FaceSchema, type Balance, type Scenario, type Face } from "./balance.js";

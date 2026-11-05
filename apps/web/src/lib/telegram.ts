@@ -31,6 +31,19 @@ export function tg(): TgWebApp | null {
 }
 
 /** Подготовка оболочки: расширенный экран, портрет, без закрытия свайпом. */
+let currentBack: (() => void) | null = null;
+/** Системная кнопка «Назад»: один обработчик за раз. */
+export function setBack(cb: (() => void) | null): void {
+  const w = tg();
+  if (!w) return;
+  if (currentBack) w.BackButton.offClick(currentBack);
+  currentBack = cb;
+  if (cb) {
+    w.BackButton.onClick(cb);
+    w.BackButton.show();
+  } else w.BackButton.hide();
+}
+
 export function setupShell(): void {
   const w = tg();
   if (!w) return;
@@ -51,4 +64,13 @@ export function haptic(kind: "tap" | "success" | "error"): void {
   if (!h) return;
   if (kind === "tap") h.impactOccurred("light");
   else h.notificationOccurred(kind);
+}
+
+let lastImpact = 0;
+/** Вибрация удара; не чаще раза в 40 мс, чтобы серия ударов кубиков не сливалась в гул. */
+export function hapticImpact(style: "light" | "medium" | "heavy" | "soft" = "light"): void {
+  const now = performance.now();
+  if (now - lastImpact < 40) return;
+  lastImpact = now;
+  tg()?.HapticFeedback?.impactOccurred(style);
 }

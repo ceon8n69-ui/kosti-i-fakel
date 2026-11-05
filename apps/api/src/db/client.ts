@@ -7,7 +7,7 @@ import * as schema from "./schema.js";
 export type Db = ReturnType<typeof createDb>["db"];
 
 export function createDb(url: string) {
-  const client = postgres(url, { max: 10, onnotice: () => {} });
+  const client = postgres(url, { max: Number(process.env.DB_POOL_MAX ?? 20), onnotice: () => {} });
   const db = drizzle(client, { schema });
   return { db, close: () => client.end({ timeout: 5 }) };
 }

@@ -7,17 +7,22 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "record-dice": "node scripts/record-dice.mjs"
   },
   "dependencies": {
     "@kf/schema": "workspace:*",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "three": "0.180.0",
+    "@kf/engine": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "@vitejs/plugin-react": "5.0.4",
-    "vite": "7.1.9"
+    "vite": "7.1.9",
+    "@types/three": "0.180.0",
+    "cannon-es": "0.20.0"
   }
 }

@@ -7,7 +7,9 @@
 | Этап | Состояние |
 | --- | --- |
 | 0. Фундамент | ✅ принят 05.11.2026: бот @kostiandfakel_bot, Railway `KOSTI-I-FAKEL` |
-| 1. Вертикальный срез | — |
+| 1. Вертикальный срез | ✅ код готов, ждёт приёмки на телефоне |
+
+**Этап 1 добавляет:** детерминированный движок правил (`packages/engine`, PCG32, журнал событий, проекция для игрока, проверка бросков по зерну), партии на сервере (журнал, снимки каждые 20 событий, idempotency по `commandId`, `expectedSeq`, WebSocket и REST, догрузка пропущенного по `sinceSeq`), бой в 3D: изометрическая диорама на Three.js, 12 записанных траекторий на тип кубика, анимации миниатюр, синтезированный звук, вибрация, замедление и эффект стола на натуральных 1 и 20, ускорение, режим «меньше анимации», двумерный режим без WebGL.
 
 **Этап 0 содержит:** монорепозиторий pnpm + Turborepo, авторизацию через подпись `initData`, профиль пользователя, бота (`/start`, `/help`, `/table`, `/terms`, `/paysupport`), схему БД с миграциями Drizzle, логирование pino, CI на GitHub Actions, Dockerfile для Railway, стартовый `balance.json` со схемой.
 
@@ -20,10 +22,12 @@ apps/
   web/      React + Vite: Mini App
 packages/
   schema/   Zod-схемы и общие типы, схема balance.json
-  content/  balance.json и загрузчик с проверкой
+  content/  balance.json, сценарий среза, загрузчик с проверкой
+  engine/   чистые правила: applyCommand, редьюсер событий, project, PCG32, verifyJournal
+e2e/        Playwright с имитацией Telegram
 ```
 
-`engine`, `sim`, `llm` и `worker` появятся на этапах 1–2.
+`sim`, `llm` и `worker` появятся на этапе 2.
 
 ## Локальный запуск
 
@@ -47,6 +51,12 @@ TEST_DATABASE_URL=postgres://kf:kf@localhost:5432/kf_test pnpm test
 pnpm typecheck
 ```
 
+E2E (нужны `pnpm build` и PostgreSQL): `TEST_DATABASE_URL=… pnpm --filter @kf/e2e e2e`.
+
+Нагрузка: `DATABASE_URL=… pnpm --filter @kf/api exec tsx scripts/load.ts 200 1000` — 200 партий, пауза игрока ~1 с.
+
+Траектории кубиков пересчитываются командой `pnpm --filter @kf/web record-dice` (результат детерминирован и закоммичен).
+
 Интеграционные тесты API пропускаются, если `TEST_DATABASE_URL` не задан. В CI они идут на PostgreSQL 16. CI также проверяет, что миграции совпадают со схемой (`drizzle-kit check`) и что JS Mini App укладывается в 450 КБ gzip.
 
 После изменения `apps/api/src/db/schema.ts`: `pnpm db:generate`, коммит файла из `apps/api/drizzle/`.
@@ -66,6 +76,7 @@ pnpm typecheck
 | `SESSION_TTL_SEC` | нет, 3600 | Срок сессии |
 | `AUTH_MAX_AGE_SEC` | нет, 86400 | Максимальный возраст `auth_date` |
 | `RUN_MIGRATIONS` | нет, `true` | Миграции при старте |
+| `DB_POOL_MAX` | нет, 20 | Размер пула соединений PostgreSQL |
 | `WEB_DIST` | нет | Путь к сборке Mini App (в Docker задан) |
 | `LOG_LEVEL`, `PORT` | нет | Логи и порт |
 
@@ -84,3 +95,9 @@ pnpm typecheck
 - [x] Запись пользователя создаётся (`POST /auth/telegram` → 200 на проде).
 - [x] Подделанная `initData` получает 401 (тесты `apps/api/src/app.test.ts`).
 - [ ] CI зелёный.
+
+### Приёмка этапа 1
+
+- [ ] Бой проходится на реальном телефоне (iPhone и средний Android).
+- [ ] Состояние воспроизводится из журнала: после перезагрузки страницы бой продолжается с того же места; «Проверить броски» в конце подтверждает все броски по зерну.
+- [ ] Натуральные 1 и 20 дают заметный эффект. Проще всего проверить на «Осмотреть проход»: каждая проверка — новый d20 (и −1 свет), 1 или 20 выпадает в среднем раз в 10 бросков.

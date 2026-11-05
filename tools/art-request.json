@@ -1,1 +1,1 @@
-{ "keys": "ghost", "kind": "", "quality": "medium", "model": "gpt-image-2.5-flare", "note": "NPC: призрак Савы", "run": 6 }
+{ "keys": "guardian,wolf,forest_pine,ground_forest,item_lucky_die", "kind": "", "quality": "high", "model": "gpt-image-2.5-sunburst", "note": "проба высокого качества: миниатюра, новый монстр, препятствие, земля, иконка", "run": 7 }

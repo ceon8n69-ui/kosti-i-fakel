@@ -18,14 +18,16 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "tools/art-manifest.json"
 SOURCE = ROOT / "art-source"
 API = "https://api.openai.com/v1/images/generations"
-SIZE = {"mini": "1024x1536"}
-MINI_W, MINI_H, FEET = 256, 384, 0.96
+SIZE = {"mini": "1024x1536", "prop": "1024x1536", "ground": "1024x1024", "item": "1024x1024"}
+# Миниатюры и препятствия — 512×768: на телефонах с плотным экраном 256×384 выглядели мыльно.
+MINI_W, MINI_H, FEET = 512, 768, 0.96
 
 
 def generate(prompt, kind, model, quality):
     import requests
-    body = {"model": model, "prompt": prompt, "size": SIZE[kind], "quality": quality, "n": 1,
-            "background": "transparent", "output_format": "png"}
+    body = {"model": model, "prompt": prompt, "size": SIZE[kind], "quality": quality, "n": 1, "output_format": "png"}
+    if kind != "ground":
+        body["background"] = "transparent"
     for attempt in range(4):
         r = requests.post(API, timeout=300, json=body,
                           headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"})
@@ -52,10 +54,27 @@ def fit_mini(img):
     return out
 
 
+def fit_item(img):
+    img = img.convert("RGBA")
+    box = img.getchannel("A").point(lambda a: 255 if a > 24 else 0).getbbox() or (0, 0, *img.size)
+    obj = img.crop(box)
+    scale = 236 / max(obj.width, obj.height)
+    obj = obj.resize((max(1, round(obj.width * scale)), max(1, round(obj.height * scale))), Image.LANCZOS)
+    out = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    out.alpha_composite(obj, ((256 - obj.width) // 2, (256 - obj.height) // 2))
+    return out
+
+
 def save(entry, raw):
-    out = fit_mini(Image.open(io.BytesIO(raw)))
+    img = Image.open(io.BytesIO(raw))
+    kind = entry["kind"]
     path = ROOT / entry["path"]
     path.parent.mkdir(parents=True, exist_ok=True)
+    if kind == "ground":
+        out = img.convert("RGB").resize((512, 512), Image.LANCZOS)
+        out.save(path, "JPEG", quality=86, optimize=True)
+        return path, out.size
+    out = fit_item(img) if kind == "item" else fit_mini(img)
     out.save(path, "PNG", optimize=True)
     return path, out.size
 

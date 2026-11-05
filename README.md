@@ -6,7 +6,7 @@
 
 | Этап | Состояние |
 | --- | --- |
-| 0. Фундамент | ✅ код готов, ждёт деплоя на Railway |
+| 0. Фундамент | ✅ принят 05.11.2026: бот @kostiandfakel_bot, Railway `KOSTI-I-FAKEL` |
 | 1. Вертикальный срез | — |
 
 **Этап 0 содержит:** монорепозиторий pnpm + Turborepo, авторизацию через подпись `initData`, профиль пользователя, бота (`/start`, `/help`, `/table`, `/terms`, `/paysupport`), схему БД с миграциями Drizzle, логирование pino, CI на GitHub Actions, Dockerfile для Railway, стартовый `balance.json` со схемой.
@@ -80,7 +80,7 @@ pnpm typecheck
 
 ### Приёмка этапа 0
 
-- [ ] `/start` в боте → кнопка → Mini App показывает профиль.
-- [ ] В таблице `users` появилась запись (`select * from users`).
-- [ ] Подделанная `initData` получает 401 (покрыто тестами `apps/api/src/app.test.ts`).
+- [x] Mini App открывается из бота и показывает профиль (iPhone, 05.11.2026).
+- [x] Запись пользователя создаётся (`POST /auth/telegram` → 200 на проде).
+- [x] Подделанная `initData` получает 401 (тесты `apps/api/src/app.test.ts`).
 - [ ] CI зелёный.

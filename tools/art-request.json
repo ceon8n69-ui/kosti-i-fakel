@@ -1,1 +1,1 @@
-{ "keys": "guardian,rat_swarm,skeleton_guard", "kind": "", "quality": "medium", "model": "gpt-image-2.5-flare", "note": "пробная партия: проверить стиль", "run": 4 }
+{ "keys": "rogue,sorcerer,healer,rotten_archer,slime,shade,cultist,rust_golem,rat_queen,lamplighter", "kind": "", "quality": "medium", "model": "gpt-image-2.5-flare", "note": "остальные 10 фигурок в одобренном стиле", "run": 5 }

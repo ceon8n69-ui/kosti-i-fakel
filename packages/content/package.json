@@ -16,6 +16,8 @@
     "dist",
     "balance.json",
     "items.json",
+    "biomes.json",
+    "events.json",
     "dungeons"
   ],
   "scripts": {

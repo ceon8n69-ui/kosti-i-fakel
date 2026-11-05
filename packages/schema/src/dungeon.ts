@@ -52,6 +52,8 @@ export const DungeonObjectSchema = z.discriminatedUnion("type", [
   z.object({ ...base, type: z.literal("npc"), npcId: id }),
   z.object({ ...base, type: z.literal("key"), keyId: id, textId: textId.optional() }),
   z.object({ ...base, type: z.literal("trap"), trapId: z.string(), hidden: z.boolean().default(true) }),
+  /** Событие с выбором: варианты и исходы — в events. */
+  z.object({ ...base, type: z.literal("event"), eventId: id }),
 ]);
 export type DungeonObject = z.infer<typeof DungeonObjectSchema>;
 export type DungeonObjectType = DungeonObject["type"];
@@ -85,6 +87,64 @@ export const NpcSchema = z.object({
   doorId: id.optional(),
 });
 export type NpcDefinition = z.infer<typeof NpcSchema>;
+
+const target = z.enum(["leader", "all", "random"]);
+
+/** Исход события. Порядок важен: spawn начинает бой и обрывает остальные исходы. */
+export const OutcomeSchema = z.discriminatedUnion("do", [
+  z.object({ do: z.literal("gold"), amount: int.min(-200).max(500) }),
+  z.object({ do: z.literal("item"), itemId: z.string() }),
+  z.object({ do: z.literal("light"), delta: int.min(-20).max(20) }),
+  z.object({ do: z.literal("damage"), amount: int.min(1).max(20), target }),
+  z.object({ do: z.literal("heal"), amount: int.min(1).max(30), target }),
+  z.object({ do: z.literal("poison"), amount: int.min(1).max(5), target }),
+  z.object({ do: z.literal("doom"), delta: int.min(-5).max(5) }),
+  z.object({ do: z.literal("spawn"), monsters: z.array(z.string()).min(1).max(4) }),
+  z.object({ do: z.literal("text"), text: z.string().max(300) }),
+  z.object({ do: z.literal("reveal"), radius: int.min(1).max(12) }),
+  z.object({ do: z.literal("ally"), name: z.string().max(24), damage: int.min(1).max(5) }),
+  z.object({ do: z.literal("xp"), amount: int.min(1).max(200) }),
+]);
+export type Outcome = z.infer<typeof OutcomeSchema>;
+
+export const EventOptionSchema = z.object({
+  id,
+  label: z.string().min(1).max(48),
+  check: z.object({ attr, dc }).optional(),
+  cost: z.object({ gold: int.min(1).max(500) }).optional(),
+  success: z.array(OutcomeSchema).max(6),
+  fail: z.array(OutcomeSchema).max(6).default([]),
+});
+
+export const EventDefinitionSchema = z.object({
+  id,
+  text: z.string().min(1).max(300),
+  options: z.array(EventOptionSchema).min(1).max(4),
+});
+export type EventDefinition = z.infer<typeof EventDefinitionSchema>;
+
+/** Библиотека событий для генератора экспедиций. */
+export const EventLibrarySchema = z.array(EventDefinitionSchema.extend({ biomes: z.array(z.string()).min(1) }));
+
+export const BiomeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  water: z.number().min(0).max(0.5),
+  chasm: z.number().min(0).max(0.3),
+  traps: z.array(z.string()).min(1),
+  groups: z.array(z.array(z.string()).min(1)).min(1),
+  bosses: z.array(z.array(z.string()).min(1)).min(1),
+  texts: z.object({
+    intro: z.array(z.string()).min(1),
+    encounter: z.array(z.string()).min(1),
+    boss: z.array(z.string()).min(1),
+    treasury: z.array(z.string()).min(1),
+  }),
+});
+export type Biome = z.infer<typeof BiomeSchema>;
+
+export const BIOMES = ["dungeon", "forest", "mountains", "swamp", "ruins", "caves"] as const;
+export type BiomeId = (typeof BIOMES)[number];
 
 export const VariableSchema = z.object({ id, initial: int.min(-99).max(99).default(0) });
 export type VariableDefinition = z.infer<typeof VariableSchema>;
@@ -138,6 +198,10 @@ export const DungeonDefinitionSchema = z
     tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
     /** Обучающее: без постоянной смерти, награды от системы. */
     tutorial: z.boolean().default(false),
+    /** Вид местности: определяет плитки и препятствия на клиенте. */
+    biome: z.enum(BIOMES).default("dungeon"),
+    /** Сгенерировано (экспедиция), а не построено автором. */
+    generated: z.boolean().default(false),
     size: z.object({ w: int.min(4).max(32), h: int.min(4).max(32) }),
     tiles: z.array(z.string()),
     objects: z.array(DungeonObjectSchema).max(200),
@@ -145,6 +209,7 @@ export const DungeonDefinitionSchema = z
     npcs: z.array(NpcSchema).max(8).default([]),
     rules: z.array(DungeonRuleSchema).max(30).default([]),
     variables: z.array(VariableSchema).max(16).default([]),
+    events: z.array(EventDefinitionSchema).max(12).default([]),
     /** Тексты автора; ключ intro показывается при входе. */
     texts: z.record(textId, z.string().max(400)),
   })
@@ -172,5 +237,7 @@ export const DungeonDefinitionSchema = z
     for (const n of d.npcs) refs.push(...n.lines);
     for (const r of d.rules) for (const a of r.actions) if (a.do === "show_text") refs.push(a.textId);
     for (const t of refs) if (!textKeys.has(t)) ctx.addIssue({ code: "custom", message: `missing text ${t}` });
+    const evIds = new Set(d.events.map((e) => e.id));
+    for (const o of d.objects) if (o.type === "event" && !evIds.has(o.eventId)) ctx.addIssue({ code: "custom", message: `missing event ${o.eventId}` });
   });
 export type DungeonDefinition = z.infer<typeof DungeonDefinitionSchema>;

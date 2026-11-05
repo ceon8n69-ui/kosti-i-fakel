@@ -23,6 +23,7 @@ export function botStep(s: SessionState, heroId: string, memo: { searches: Set<s
     }
     return null;
   }
+  if (h.status !== "up") return null;
   const leader = s.leaderId === heroId;
   const up = s.heroes.filter((x) => x.status === "up");
   const downed = s.heroes.find((x) => x.status === "downed");

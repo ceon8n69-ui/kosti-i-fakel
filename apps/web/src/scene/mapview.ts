@@ -17,8 +17,42 @@ export interface MapHooks {
   onImpact(s: number): void;
 }
 
+/** Чем рисуются непроходимые клетки в каждом биоме: стенами (подземелья) или фигурками-препятствиями. */
+const PROPS: Record<string, string[]> = {
+  forest: ["forest_pine", "forest_pine", "forest_oak", "forest_bush"],
+  mountains: ["mountains_boulder", "mountains_spire", "mountains_boulder"],
+  swamp: ["swamp_deadtree", "swamp_reeds", "swamp_reeds"],
+  ruins: ["ruins_pillar", "ruins_wall"],
+  caves: ["caves_stalagmite", "caves_rocks"],
+};
+const PROP_COLOR: Record<string, string> = {
+  forest_pine: "#1f3a24",
+  forest_oak: "#3b4a22",
+  forest_bush: "#2c4a28",
+  mountains_boulder: "#6b6a66",
+  mountains_spire: "#58554f",
+  swamp_deadtree: "#3a3328",
+  swamp_reeds: "#5a6a30",
+  ruins_pillar: "#9a948a",
+  ruins_wall: "#7a746a",
+  caves_stalagmite: "#4a4650",
+  caves_rocks: "#3a3a44",
+};
+const GROUND_COLOR: Record<string, string> = { dungeon: "#3d3832", forest: "#2f3a22", mountains: "#56544e", swamp: "#2f2c1e", ruins: "#4e4a40", caves: "#2c2a2e" };
+
+/** Детерминированный «случай» по клетке — одна и та же клетка всегда выглядит одинаково. */
+const cellHash = (x: number, y: number) => {
+  let h = (x * 374761393 + y * 668265263) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
+};
+
 export class MapView {
   readonly group = new THREE.Group();
+  private biome = "dungeon";
+  private propMats = new Map<string, THREE.MeshBasicMaterial>();
+  private propGeo = new THREE.PlaneGeometry(1, 1.5);
+  private loader = new THREE.TextureLoader();
   private tiles = new Map<string, THREE.Object3D>();
   private objects = new Map<string, THREE.Group>();
   private party: THREE.Group[] = [];
@@ -54,6 +88,7 @@ export class MapView {
         }
     });
     this.mats = {
+      stone: new THREE.MeshStandardMaterial({ map: stone, roughness: 0.95 }),
       floor: new THREE.MeshStandardMaterial({ map: stone, roughness: 0.95 }),
       wall: new THREE.MeshStandardMaterial({ map: brick, roughness: 0.9 }),
       water: new THREE.MeshStandardMaterial({ color: "#1d4a5c", roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.85 }),
@@ -75,8 +110,64 @@ export class MapView {
     return new THREE.Vector3(x * CELL, h, y * CELL);
   }
 
+  /** Земля биома: готовая текстура, пока она грузится — цвет. */
+  setBiome(biome: string): void {
+    if (this.biome === biome && this.mats.floor) return;
+    this.biome = biome;
+    for (const t of this.tiles.values()) this.group.remove(t);
+    this.tiles.clear();
+    const floor = new THREE.MeshStandardMaterial({ color: GROUND_COLOR[biome] ?? "#3d3832", roughness: 0.95 });
+    this.loader.load(
+      `/art/ground/${biome}.jpg`,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 8;
+        floor.map = t;
+        floor.color.set("#ffffff");
+        floor.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        if (biome === "dungeon") {
+          floor.map = (this.mats.stone as THREE.MeshStandardMaterial).map;
+          floor.color.set("#ffffff");
+          floor.needsUpdate = true;
+        }
+      },
+    );
+    this.mats.floor = floor;
+  }
+
+  private propMat(key: string): THREE.MeshBasicMaterial {
+    let m = this.propMats.get(key);
+    if (m) return m;
+    // Заглушка: силуэт цвета препятствия; готовый арт подменяет её, как только загрузится.
+    const ph = this.hooks.canvasTex(64, 96, (c) => {
+      c.fillStyle = PROP_COLOR[key] ?? "#444";
+      c.beginPath();
+      if (key.includes("pine")) {
+        c.moveTo(32, 4);
+        c.lineTo(58, 80);
+        c.lineTo(6, 80);
+      } else c.ellipse(32, 60, 28, 34, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#2a1c10";
+      c.fillRect(28, 78, 8, 18);
+    });
+    m = new THREE.MeshBasicMaterial({ map: ph, transparent: true, alphaTest: 0.25 });
+    this.loader.load(`/art/props/${key}.webp`, (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      m!.map = t;
+      m!.needsUpdate = true;
+    });
+    this.propMats.set(key, m);
+    return m;
+  }
+
   /** Полная перерисовка по видимому состоянию (вход, переподключение, конец очереди). */
   sync(s: VisibleState): void {
+    this.setBiome((s as VisibleState & { biome?: string }).biome ?? "dungeon");
     for (let y = 0; y < s.map.h; y++) for (let x = 0; x < s.map.w; x++) this.setTile(x, y, s.map.tiles[y]![x]!, false);
     const live = new Set(s.objects.map((o) => o.id));
     for (const [id, g] of this.objects)
@@ -104,8 +195,26 @@ export class MapView {
       this.tiles.delete(k);
       return;
     }
-    let m: THREE.Mesh;
-    if (ch === "#") {
+    let m: THREE.Object3D;
+    const props = PROPS[this.biome];
+    if (ch === "#" && props) {
+      // На природе непроходимая клетка — земля и препятствие на ней.
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(this.geo.floor, this.mats.floor!);
+      base.position.y = 0.06;
+      base.receiveShadow = true;
+      g.add(base);
+      const h = cellHash(x, y);
+      const key = props[h % props.length]!;
+      const scale = 0.85 + ((h >>> 8) % 40) / 100;
+      const sprite = new THREE.Mesh(this.propGeo, this.propMat(key));
+      sprite.scale.setScalar(scale);
+      sprite.position.set(((h >>> 4) % 20) / 100 - 0.1, 0.12 + 0.75 * scale, ((h >>> 12) % 20) / 100 - 0.1);
+      sprite.rotation.y = Math.PI / 4;
+      g.add(sprite);
+      g.position.copy(this.cellPos(x, y));
+      m = g;
+    } else if (ch === "#") {
       m = new THREE.Mesh(this.geo.wall, this.mats.wall!);
       m.position.copy(this.cellPos(x, y, WALL_H / 2));
       m.castShadow = true;
@@ -115,6 +224,7 @@ export class MapView {
     }
     m.receiveShadow = true;
     m.userData = { ch, cell: [x, y] };
+    m.traverse((c) => (c.userData = { ch, cell: [x, y] }));
     this.group.add(m);
     this.tiles.set(k, m);
     if (animate) {
@@ -247,6 +357,24 @@ export class MapView {
         }
         break;
       }
+      case "event": {
+        // Знак события: каменная плита с тлеющей руной.
+        box(0.5, 0.06, 0.5, M.stoneLight!, 0.03);
+        const rune = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 8, 20), new THREE.MeshBasicMaterial({ color: "#ffd45c" }));
+        rune.rotation.x = -Math.PI / 2;
+        rune.position.y = 0.08;
+        rune.name = "rune";
+        g.add(rune);
+        const glow = new THREE.PointLight("#ffcc55", 2.5, 2);
+        glow.position.y = 0.5;
+        glow.name = "glow";
+        g.add(glow);
+        const q = new THREE.Mesh(new THREE.OctahedronGeometry(0.1), new THREE.MeshBasicMaterial({ color: "#ffe08a" }));
+        q.position.y = 0.45;
+        q.name = "spin";
+        g.add(q);
+        break;
+      }
       case "npc": {
         const mini = this.hooks.makeMini("ghost", "hero");
         mini.traverse((c) => {
@@ -294,6 +422,12 @@ export class MapView {
       if (fl) fl.scale.setScalar(0.5);
     }
     if (o.type === "trap" && (o.state === "disarmed" || o.state === "triggered")) g.traverse((c) => c instanceof THREE.Mesh && (c.material = this.mats.stoneLight!));
+    if (o.type === "event" && o.used) {
+      for (const n of ["rune", "glow", "spin"]) {
+        const c = g.getObjectByName(n);
+        if (c) c.visible = false;
+      }
+    }
   }
 
   removeObject(id: string): void {
@@ -410,6 +544,11 @@ export class MapView {
   tick(now: number): void {
     for (const g of this.objects.values()) {
       if (g.userData.obj?.type === "key") g.rotation.y = now / 600;
+      const sp = g.getObjectByName("spin");
+      if (sp && g.userData.obj?.type === "event") {
+        sp.rotation.y = now / 400;
+        sp.position.y = 0.45 + Math.sin(now / 300) * 0.05;
+      }
       const fire = g.getObjectByName("fire") as THREE.PointLight | undefined;
       if (fire && !g.userData.obj?.used) fire.intensity = 5 + Math.sin(now / 70) * 0.8 + Math.random() * 0.6;
     }

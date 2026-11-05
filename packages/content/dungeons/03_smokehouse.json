@@ -4,7 +4,10 @@
   "title": "Коптильня",
   "tier": 1,
   "tutorial": true,
-  "size": { "w": 18, "h": 12 },
+  "size": {
+    "w": 18,
+    "h": 12
+  },
   "tiles": [
     "##################",
     "#................#",
@@ -20,22 +23,129 @@
     "##################"
   ],
   "objects": [
-    { "id": "entrance", "type": "entrance", "x": 1, "y": 1 },
-    { "id": "note_smoke", "type": "note", "x": 4, "y": 1, "textId": "note_smoke" },
-    { "id": "trap_gas", "type": "trap", "x": 12, "y": 3, "trapId": "gas", "hidden": true },
-    { "id": "campfire", "type": "campfire", "x": 2, "y": 5 },
-    { "id": "chest_hooks", "type": "chest", "x": 15, "y": 5, "loot": { "gold": 10, "items": ["torch", "return_scroll"] } },
-    { "id": "door_store", "type": "door", "x": 7, "y": 9, "lock": { "dc": 13 } },
-    { "id": "treasury", "type": "treasury", "x": 2, "y": 8, "textId": "treasury" }
+    {
+      "id": "entrance",
+      "type": "entrance",
+      "x": 1,
+      "y": 1
+    },
+    {
+      "id": "note_smoke",
+      "type": "note",
+      "x": 4,
+      "y": 1,
+      "textId": "note_smoke"
+    },
+    {
+      "id": "trap_gas",
+      "type": "trap",
+      "x": 12,
+      "y": 3,
+      "trapId": "gas",
+      "hidden": true
+    },
+    {
+      "id": "campfire",
+      "type": "campfire",
+      "x": 2,
+      "y": 5
+    },
+    {
+      "id": "chest_hooks",
+      "type": "chest",
+      "x": 15,
+      "y": 5,
+      "loot": {
+        "gold": 10,
+        "items": [
+          "torch",
+          "return_scroll",
+          "lucky_die"
+        ]
+      }
+    },
+    {
+      "id": "door_store",
+      "type": "door",
+      "x": 7,
+      "y": 9,
+      "lock": {
+        "dc": 13
+      }
+    },
+    {
+      "id": "treasury",
+      "type": "treasury",
+      "x": 2,
+      "y": 8,
+      "textId": "treasury"
+    }
   ],
   "encounters": [
-    { "id": "smoke_shades", "zone": { "x": 5, "y": 3, "w": 4, "h": 1 }, "monsters": ["shade"], "textId": "shades" },
-    { "id": "smokers", "zone": { "x": 8, "y": 7, "w": 9, "h": 4 }, "monsters": ["cultist", "rat_swarm"], "textId": "smokers" }
+    {
+      "id": "smoke_shades",
+      "zone": {
+        "x": 5,
+        "y": 3,
+        "w": 4,
+        "h": 1
+      },
+      "monsters": [
+        "shade"
+      ],
+      "textId": "shades"
+    },
+    {
+      "id": "smokers",
+      "zone": {
+        "x": 8,
+        "y": 7,
+        "w": 9,
+        "h": 4
+      },
+      "monsters": [
+        "cultist",
+        "rat_swarm"
+      ],
+      "textId": "smokers"
+    }
   ],
   "npcs": [],
   "rules": [
-    { "id": "smoke_thickens", "event": { "on": "light_below", "value": 26 }, "actions": [{ "do": "show_text", "textId": "smoke" }], "limit": 1 },
-    { "id": "darkness_hunts", "event": { "on": "light_below", "value": 12 }, "actions": [{ "do": "show_text", "textId": "dark" }, { "do": "spawn", "monsters": ["shade"] }], "limit": 1 }
+    {
+      "id": "smoke_thickens",
+      "event": {
+        "on": "light_below",
+        "value": 26
+      },
+      "actions": [
+        {
+          "do": "show_text",
+          "textId": "smoke"
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "id": "darkness_hunts",
+      "event": {
+        "on": "light_below",
+        "value": 12
+      },
+      "actions": [
+        {
+          "do": "show_text",
+          "textId": "dark"
+        },
+        {
+          "do": "spawn",
+          "monsters": [
+            "shade"
+          ]
+        }
+      ],
+      "limit": 1
+    }
   ],
   "variables": [],
   "texts": {

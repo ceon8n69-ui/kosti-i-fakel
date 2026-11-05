@@ -17,6 +17,7 @@ export const ClientCommandSchema = z.intersection(
     z.object({ type: z.literal("REST"), heroId: id, objectId: id }),
     z.object({ type: z.literal("RETREAT"), heroId: id }),
     z.object({ type: z.literal("USE_ITEM"), heroId: id, itemId: id, targetId: id.optional() }),
+    z.object({ type: z.literal("CHOOSE_OPTION"), heroId: id, objectId: id, optionId: id }),
     z.object({ type: z.literal("CHANGE_ROW"), heroId: id, row: z.enum(["front", "back"]) }),
     z.object({ type: z.literal("ROLL_DICE"), heroId: id }),
     z.object({ type: z.literal("REROLL"), heroId: id, dice }),
@@ -38,7 +39,11 @@ export const CreateHeroSchema = z.object({
   name: z.string().trim().min(1).max(24).optional(),
 });
 
-export const CreateSessionSchema = z.object({
-  heroId: z.string().uuid(),
-  dungeonId: z.string().regex(/^[a-z0-9_]{1,32}$/),
-});
+export const CreateSessionSchema = z
+  .object({
+    heroId: z.string().uuid(),
+    dungeonId: z.string().regex(/^[a-z0-9_]{1,32}$/).optional(),
+    /** Экспедиция: биом новой случайной карты. */
+    biome: z.enum(["forest", "mountains", "swamp", "ruins", "caves"]).optional(),
+  })
+  .refine((b) => !!b.dungeonId !== !!b.biome, "dungeonId or biome");

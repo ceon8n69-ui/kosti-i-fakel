@@ -6,6 +6,7 @@ import { cheb, findPath, isSeen, key, objectsAt, roomOf, visibleFrom, visibleObj
 import { hero as getHero } from "./reducer.js";
 import { startEncounter } from "./combat.js";
 import { fireRules } from "./rules.js";
+import type { Outcome } from "@kf/schema";
 import type { RObject, SessionState } from "./types.js";
 
 const inZone = (z: { x: number; y: number; w: number; h: number }, x: number, y: number) => x >= z.x && y >= z.y && x < z.x + z.w && y < z.y + z.h;
@@ -226,6 +227,8 @@ export function useError(s: SessionState, o: RObject): string | null {
     case "plate":
     case "light":
       return "nothing";
+    case "event":
+      return o.used ? "used" : "use_choose";
   }
 }
 
@@ -372,6 +375,7 @@ export function search(ctx: Ctx, heroId: string): void {
 
 export function useItem(ctx: Ctx, heroId: string, itemId: string, targetId?: string): void {
   const it = itemById(itemId)!;
+  if (it.kind !== "consumable") return;
   ctx.emit({ type: "ITEM_USED", heroId, itemId, ...(targetId ? { targetId } : {}) });
   switch (it.effect) {
     case "heal": {
@@ -386,5 +390,89 @@ export function useItem(ctx: Ctx, heroId: string, itemId: string, targetId?: str
     case "retreat":
       finish(ctx, "retreat");
       return;
+  }
+}
+
+/** Выбор варианта в событии: проверка (если есть) и исходы. */
+export function chooseOption(ctx: Ctx, heroId: string, o: RObject, optionId: string): void {
+  const s = ctx.s;
+  const ev = s.def.events.find((e) => e.id === o.eventId);
+  const opt = ev?.options.find((x) => x.id === optionId);
+  if (!opt) return;
+  ctx.emit({ type: "OPTION_CHOSEN", objectId: o.id, optionId, heroId });
+  let ok = true;
+  if (opt.check) {
+    ok = check(ctx, heroId, opt.check.attr, opt.check.dc, "event");
+    changeLight(ctx, -balance.light.cost.check, "check");
+  }
+  applyOutcomes(ctx, heroId, ok ? opt.success : opt.fail, `event_${o.id}`);
+}
+
+export function applyOutcomes(ctx: Ctx, heroId: string, outcomes: Outcome[], encounterId: string): void {
+  const s = ctx.s;
+  const targets = (t: "leader" | "all" | "random") => {
+    const up = upHeroes(s);
+    if (!up.length) return [];
+    if (t === "all") return up;
+    if (t === "leader") return [up.find((h) => h.id === s.leaderId) ?? up[0]!];
+    return [up.length === 1 ? up[0]! : up[ctx.rng.int(up.length)]!];
+  };
+  for (const out of outcomes) {
+    if (ctx.ended || s.phase !== "explore") return;
+    switch (out.do) {
+      case "gold": {
+        const gold = Math.max(0, s.bag.gold + out.amount);
+        if (gold !== s.bag.gold) ctx.emit({ type: "GOLD_CHANGED", delta: gold - s.bag.gold, gold });
+        break;
+      }
+      case "item":
+        if (itemById(out.itemId)) ctx.emit({ type: "ITEM_FOUND", objectId: "event", gold: 0, items: [out.itemId], keys: [] });
+        break;
+      case "light":
+        changeLight(ctx, out.delta, "event");
+        break;
+      case "damage":
+        for (const h of targets(out.target)) damageHero(ctx, h.id, out.amount, "event", "trap", true);
+        if (checkWipe(ctx)) return;
+        break;
+      case "heal":
+        for (const h of s.heroes.filter((x) => x.status !== "dead" && (out.target === "all" || x.id === (targets(out.target)[0]?.id ?? heroId)))) {
+          if (h.status === "downed") ctx.emit({ type: "HERO_RAISED", heroId: h.id, hp: Math.min(h.maxHp, out.amount) });
+          else ctx.emit({ type: "HEALED", targetId: h.id, amount: Math.min(out.amount, h.maxHp - h.hp), sourceId: "event" });
+        }
+        break;
+      case "poison":
+        for (const h of targets(out.target)) ctx.emit({ type: "POISON_CHANGED", targetId: h.id, poison: getHero(s, h.id).poison + out.amount });
+        break;
+      case "doom": {
+        const doom = Math.max(0, s.doom + out.delta);
+        if (doom !== s.doom) ctx.emit({ type: "DOOM_CHANGED", delta: doom - s.doom, doom, reason: "event" });
+        break;
+      }
+      case "spawn":
+        startEncounter(ctx, encounterId, out.monsters);
+        return;
+      case "text":
+        ctx.emit({ type: "TEXT_SHOWN", textId: "event", text: out.text });
+        break;
+      case "reveal": {
+        // Подсказка проводника: открыть окрестности без учёта прямой видимости.
+        const cells: Cell[] = [];
+        for (let y = s.pos.y - out.radius; y <= s.pos.y + out.radius; y++)
+          for (let x = s.pos.x - out.radius; x <= s.pos.x + out.radius; x++) {
+            if (x < 0 || y < 0 || x >= s.def.size.w || y >= s.def.size.h || isSeen(s, x, y)) continue;
+            if ((x - s.pos.x) ** 2 + (y - s.pos.y) ** 2 > out.radius ** 2) continue;
+            cells.push([x, y]);
+          }
+        emitReveal(ctx, cells);
+        break;
+      }
+      case "ally":
+        ctx.emit({ type: "ALLY_JOINED", name: out.name, damage: out.damage });
+        break;
+      case "xp":
+        ctx.emit({ type: "XP_BONUS", amount: out.amount });
+        break;
+    }
   }
 }

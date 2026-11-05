@@ -121,3 +121,12 @@
 .rewards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 6px; }
 .rewards span { padding: 6px 10px; border-radius: 10px; background: #1b130d; border: 1px solid var(--edge); font-size: 14px; }
 .fl-loot { color: #ffd45c; font-size: 18px; }
+.event-text { margin: 0 0 6px; font: 15px/1.45 Georgia, serif; color: #f1e4cf; }
+.label.left { text-align: left; margin-top: 6px; }
+.gear-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: #1b130d; border: 1px solid var(--edge); }
+.gear-row small { display: block; color: var(--muted); font-size: 12px; }
+.item-ic { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.item-ic.fb { display: inline-grid; place-items: center; font-size: 22px; }
+.rewards .item-ic { width: 22px; height: 22px; vertical-align: middle; }
+.r-rare { border-color: #4f7fd6 !important; } .r-epic { border-color: #b46cf0 !important; box-shadow: 0 0 10px rgba(180,108,240,.35); }
+.intent.heal { background: rgba(10,50,20,.85); color: #b6f0c4; border-color: rgba(120,220,140,.4); }

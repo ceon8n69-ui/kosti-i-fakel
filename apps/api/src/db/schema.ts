@@ -43,6 +43,15 @@ export const sessions = pgTable(
     /** id подземелья (официального или версии авторского). */
     scenarioId: text("scenario_id").notNull(),
     heroIds: jsonb("hero_ids").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    /** Все игроки партии — для поиска активного похода и прав доступа. */
+    participantIds: jsonb("participant_ids").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    /** expedition | official */
+    kind: text("kind").notNull().default("official"),
+    /** Таймер хода в секундах (null — без таймера, одиночный поход) и срок текущего хода. */
+    turnTimerSec: integer("turn_timer_sec"),
+    turnDeadline: timestamp("turn_deadline", { withTimezone: true }),
+    /** Последнее напоминание о ходе — не больше одного за таймер (ТЗ 8.4). */
+    remindedAt: timestamp("reminded_at", { withTimezone: true }),
     seedHash: text("seed_hash").notNull(),
     seed: text("seed").notNull(),
     seq: integer("seq").notNull(),
@@ -138,4 +147,84 @@ export const goldLedger = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("gold_ledger_account_idx").on(t.accountType, t.accountId)],
+);
+
+// ───────── Снаряжение и рынок ─────────
+
+/** Предметы игроков (ТЗ 12.1 items). Надетый предмет помнит героя и слот. */
+export const items = pgTable(
+  "items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id),
+    itemKey: text("item_key").notNull(),
+    rarity: text("rarity").notNull(),
+    payload: jsonb("payload_json").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    source: text("source").notNull(),
+    equippedHeroId: uuid("equipped_hero_id"),
+    slot: text("slot"),
+    /** owned | listed */
+    status: text("status").notNull().default("owned"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("items_owner_idx").on(t.ownerId), index("items_hero_idx").on(t.equippedHeroId)],
+);
+
+export const marketListings = pgTable(
+  "market_listings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => items.id),
+    sellerId: uuid("seller_id")
+      .notNull()
+      .references(() => users.id),
+    buyerId: uuid("buyer_id"),
+    price: integer("price").notNull(),
+    /** active | sold | cancelled */
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [index("market_status_idx").on(t.status, t.createdAt), index("market_seller_idx").on(t.sellerId)],
+);
+
+// ───────── Партии: столы и участники (ТЗ 12.1 tables, table_members) ─────────
+
+export const tables = pgTable("tables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => users.id),
+  chatId: bigint("chat_id", { mode: "bigint" }),
+  /** expedition (биом) */
+  targetKind: text("target_kind").notNull().default("expedition"),
+  target: text("target").notNull(),
+  /** live | async */
+  mode: text("mode").notNull().default("live"),
+  dmMode: text("dm_mode").notNull().default("auto"),
+  turnTimer: integer("turn_timer").notNull(),
+  /** lobby | started | closed */
+  status: text("status").notNull().default("lobby"),
+  sessionId: uuid("session_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tableMembers = pgTable(
+  "table_members",
+  {
+    tableId: uuid("table_id")
+      .notNull()
+      .references(() => tables.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    heroId: uuid("hero_id"),
+    ready: integer("ready").notNull().default(0),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.tableId, t.userId] })],
 );

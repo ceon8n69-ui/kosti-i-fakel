@@ -73,8 +73,9 @@ export function checkWipe(ctx: Ctx): boolean {
 export function finish(ctx: Ctx, reason: "victory" | "defeat" | "retreat"): void {
   const r = balance.rewards;
   const kills = ctx.s.killed * r.xpPerMonsterCost;
+  const base = kills + ctx.s.bonusXp;
   const xp =
-    reason === "victory" ? kills + ctx.s.tier * r.xpVictoryPerTier : reason === "retreat" ? Math.floor((kills * r.xpRetreatShare) / 100) : 0;
+    reason === "victory" ? base + ctx.s.tier * r.xpVictoryPerTier : reason === "retreat" ? Math.floor((base * r.xpRetreatShare) / 100) : 0;
   const keep = reason !== "defeat";
   ctx.emit({ type: "REWARDS", xp, gold: keep ? ctx.s.bag.gold : 0, items: keep ? [...ctx.s.bag.items] : [], reason });
   ctx.emit({ type: "SESSION_ENDED", reason });

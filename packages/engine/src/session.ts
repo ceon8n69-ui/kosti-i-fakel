@@ -1,6 +1,7 @@
 import { balance, dungeonById } from "@kf/content";
 import type { DungeonDefinition } from "@kf/schema";
 import { clone } from "./clone.js";
+import { modsOf } from "./loot.js";
 import type { GameEvent, Hero, RObject, Row, SessionState } from "./types.js";
 
 export interface HeroSeed {
@@ -12,6 +13,8 @@ export interface HeroSeed {
   level?: number;
   maxHp?: number;
   consumables?: string[];
+  /** Надетое снаряжение (ключи каталога). */
+  equipment?: string[];
 }
 
 const DEFAULT_ROW: Record<string, Row> = { guardian: "front", rogue: "front", sorcerer: "back", healer: "back" };
@@ -19,7 +22,11 @@ const DEFAULT_ROW: Record<string, Row> = { guardian: "front", rogue: "front", so
 export function createHero(id: string, seed: HeroSeed): Hero {
   const cls = balance.classes.find((c) => c.id === seed.classId);
   if (!cls) throw new Error(`unknown class ${seed.classId}`);
-  const maxHp = seed.maxHp ?? cls.hp;
+  const equipment = seed.equipment ?? [];
+  const eq = modsOf(equipment);
+  const maxHp = (seed.maxHp ?? cls.hp) + eq.hp;
+  const stats = { ...cls.stats } as Hero["stats"];
+  for (const [a, n] of Object.entries(eq.stats)) stats[a as keyof Hero["stats"]] = Math.min(balance.stats.max, stats[a as keyof Hero["stats"]] + n);
   return {
     id,
     ownerId: seed.ownerId,
@@ -33,10 +40,12 @@ export function createHero(id: string, seed: HeroSeed): Hero {
     row: DEFAULT_ROW[cls.id] ?? "front",
     status: "up",
     saves: { ok: 0, fail: 0 },
-    stats: { ...cls.stats } as Hero["stats"],
+    stats,
     dice: clone(cls.dice),
     roll: cls.dice.map(() => null),
-    freeRerolls: balance.combat.freeRerolls,
+    freeRerolls: balance.combat.freeRerolls + eq.mods.rerolls,
+    equipment,
+    mods: eq.mods,
     plan: [],
     ready: false,
     taunt: false,
@@ -98,6 +107,17 @@ function runtimeObjects(def: DungeonDefinition): RObject[] {
       case "campfire":
         r.used = false;
         break;
+      case "event": {
+        const ev = def.events.find((e) => e.id === o.eventId);
+        r.used = false;
+        r.eventId = o.eventId;
+        if (ev)
+          r.event = {
+            text: ev.text,
+            options: ev.options.map((op) => ({ id: op.id, label: op.label, ...(op.check ? { check: op.check } : {}), ...(op.cost ? { cost: op.cost } : {}) })),
+          };
+        break;
+      }
       default:
         break;
     }
@@ -126,7 +146,7 @@ export function startSession(params: { dungeonId?: string; dungeon?: DungeonDefi
     tutorial: def.tutorial,
     phase: "explore",
     partySize: heroes.length,
-    light: balance.light.start,
+    light: balance.light.start + heroes.reduce((n, h) => n + h.mods.light, 0),
     doom: 0,
     heroes,
     monsters: [],
@@ -144,6 +164,9 @@ export function startSession(params: { dungeonId?: string; dungeon?: DungeonDefi
     ruleFired: {},
     bag: { keys: [], items: startItems, gold: 0 },
     killed: 0,
+    bonusXp: 0,
+    allies: [],
+    biome: def.biome,
     story: [],
     nextId: 1,
     ended: null,

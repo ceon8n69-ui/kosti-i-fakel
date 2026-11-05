@@ -7,7 +7,8 @@ import { GameClient, type Batch } from "../lib/game";
 import { hapticImpact, setBack } from "../lib/telegram";
 import { faceDataUrl } from "../scene/glyphs";
 import { Stage3D, webglAvailable } from "../scene/stage3d";
-import { animateEvent, unitsOf, type UiHooks } from "./animate";
+import { animateEvent, itemName, unitsOf, type UiHooks } from "./animate";
+import { itemById } from "@kf/content";
 import "./combat.css";
 
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -300,7 +301,8 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
   const ended = truth?.phase === "ended" && !busy ? truth.ended : null;
   const lightPct = d ? Math.min(100, (d.light / 40) * 100) : 100;
   const lightState = !d ? "bright" : d.light >= 25 ? "bright" : d.light >= 11 ? "dusk" : d.light >= 1 ? "dark" : "gloom";
-  const bagCounts = (truth?.bag.items ?? []).reduce<Record<string, number>>((a, i) => ((a[i] = (a[i] ?? 0) + 1), a), {});
+  const bagCounts = (truth?.bag.items ?? []).filter((i) => itemById(i)?.kind === "consumable").reduce<Record<string, number>>((a, i) => ((a[i] = (a[i] ?? 0) + 1), a), {});
+  const bagGear = (truth?.bag.items ?? []).filter((i) => itemById(i)?.kind === "equipment");
   const leaderName = truth?.heroes.find((h) => h.id === truth.leaderId)?.name;
 
   const objectActions = (o: VisibleObject): { label: string; body: CommandBody }[] => {
@@ -311,7 +313,7 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
       if (o.state === "revealed") out.push({ label: t("obj.disarm"), body: { type: "INTERACT", heroId: hid, objectId: o.id, verb: "disarm" } });
       return out;
     }
-    if (o.type === "light" || o.type === "plate") return out;
+    if (o.type === "light" || o.type === "plate" || o.type === "event") return out;
     if (o.type === "campfire") {
       if (!o.used) out.push({ label: tk("obj.campfire.use"), body: { type: "REST", heroId: hid, objectId: o.id } });
       return out;
@@ -465,6 +467,34 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
               {tk(`obj.${sheet.type}`)}
               {sheet.locked && !sheet.used ? ` · ${t("obj.locked")}` : ""}
             </h3>
+            {sheet.type === "event" && sheet.event && (
+              <>
+                <p className="event-text">{sheet.event.text}</p>
+                {!sheet.used &&
+                  sheet.event.options.map((op) => {
+                    const short = !!op.cost && (truth.bag.gold ?? 0) < op.cost.gold;
+                    return (
+                      <button
+                        key={op.id}
+                        className="act item"
+                        disabled={locked || short || !myTruth}
+                        onClick={() => {
+                          setSheet(null);
+                          if (myTruth) void send({ type: "CHOOSE_OPTION", heroId: myTruth.id, objectId: sheet.id, optionId: op.id });
+                        }}
+                      >
+                        <b>{op.label}</b>
+                        {op.check && (
+                          <small>
+                            🎲 {tk(`attr.${op.check.attr}`)}, {t("event.dc")} {op.check.dc}
+                          </small>
+                        )}
+                        {op.cost && <small>🪙 {op.cost.gold}</small>}
+                      </button>
+                    );
+                  })}
+              </>
+            )}
             {objectActions(sheet).map((a) => (
               <button
                 key={a.label}
@@ -478,7 +508,7 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
                 {a.label}
               </button>
             ))}
-            {!objectActions(sheet).length && <p className="muted">{t("err.used")}</p>}
+            {!objectActions(sheet).length && (sheet.type !== "event" || sheet.used) && <p className="muted">{t("err.used")}</p>}
           </div>
         </div>
       )}
@@ -506,12 +536,30 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
                   }}
                 >
                   <b>
-                    {tk(`item.${id}`)} ×{n}
+                    {itemName(id)} ×{n}
                   </b>
-                  <small>{tk(`item.${id}.d`)}</small>
+                  <small>{itemById(id)?.desc}</small>
                 </button>
               );
             })}
+            {bagGear.length > 0 && <div className="label left">{t("bag.equipment")}</div>}
+            {bagGear.map((id, k) => {
+              const it = itemById(id);
+              return (
+                <div key={k} className={`gear-row r-${it?.kind === "equipment" ? it.rarity : "common"}`}>
+                  <ItemIcon id={id} />
+                  <div className="grow">
+                    <b>{it?.name}</b>
+                    <small>{it?.desc}</small>
+                  </div>
+                </div>
+              );
+            })}
+            {truth.allies.length > 0 && (
+              <p className="muted">
+                {t("bag.allies")}: {truth.allies.map((a) => a.name).join(", ")}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -541,7 +589,9 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
                 {rewards.items
                   .filter((i) => i !== "torch")
                   .map((i, k) => (
-                    <span key={k}>{tk(`item.${i}`)}</span>
+                    <span key={k} className={`r-${(() => { const it = itemById(i); return it?.kind === "equipment" ? it.rarity : "common"; })()}`}>
+                      <ItemIcon id={i} /> {itemName(i)}
+                    </span>
                   ))}
               </div>
             )}
@@ -559,18 +609,26 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
   );
 }
 
+export function ItemIcon({ id }: { id: string }) {
+  const it = itemById(id);
+  const fallback = it?.kind === "equipment" ? (it.slot === "weapon" ? "🗡" : it.slot === "armor" ? "🛡" : "✦") : id === "potion" ? "🧪" : id === "torch" ? "🔥" : "📜";
+  const [bad, setBad] = useState(false);
+  return bad ? <span className="item-ic fb">{fallback}</span> : <img className="item-ic" src={`/art/items/${id}.webp`} alt="" onError={() => setBad(true)} />;
+}
+
 function Intents({ intents }: { intents: Intent[] }) {
   if (!intents.length) return null;
   return (
     <div className="intents">
       {intents.map((it, i) => (
         <span key={i} className={`intent ${it.kind}`}>
-          {it.kind === "attack" && `⚔${it.amount}${it.targets.length > 1 ? `×${it.targets.length}` : ""}${it.pierce ? "!" : ""}`}
+          {it.kind === "attack" && `⚔${it.amount}${it.targets.length > 1 ? `×${it.targets.length}` : ""}${it.pierce ? "!" : ""}${it.poison ? `☠${it.poison}` : ""}`}
           {it.kind === "block" && `🛡${it.amount}`}
           {it.kind === "doom" && `◆+${it.amount}`}
           {it.kind === "charge" && "…"}
           {it.kind === "summon" && "⤒"}
           {it.kind === "drain" && `🔥−${it.amount}`}
+          {it.kind === "heal" && `✚${it.amount}`}
         </span>
       ))}
     </div>

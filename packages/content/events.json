@@ -1,0 +1,164 @@
+[
+  {
+    "id": "wounded_traveler", "biomes": ["any"],
+    "text": "У тропы стонет раненый путник. Рядом — опрокинутая котомка.",
+    "options": [
+      { "id": "help", "label": "Перевязать рану", "check": { "attr": "SPI", "dc": 11 },
+        "success": [{ "do": "text", "text": "Путник поднимается: «Я с вами до первой драки — потом уйду». Он берёт копьё." }, { "do": "ally", "name": "Путник", "damage": 2 }],
+        "fail": [{ "do": "text", "text": "Рана слишком глубокая. Путник засыпает, и вы теряете время." }, { "do": "light", "delta": -2 }] },
+      { "id": "rob", "label": "Обыскать котомку",
+        "success": [{ "do": "gold", "amount": 15 }, { "do": "doom", "delta": 2 }, { "do": "text", "text": "Монеты звенят в кармане. Рок сгущается — Бездна такое помнит." }] },
+      { "id": "leave", "label": "Пройти мимо", "success": [{ "do": "text", "text": "Стоны стихают за спиной." }] }
+    ]
+  },
+  {
+    "id": "strange_shrine", "biomes": ["ruins", "forest", "any"],
+    "text": "Заброшенное святилище. На камне — свечи, которые кто-то зажёг совсем недавно.",
+    "options": [
+      { "id": "pray", "label": "Помолиться", "check": { "attr": "SPI", "dc": 13 },
+        "success": [{ "do": "heal", "amount": 4, "target": "all" }, { "do": "light", "delta": 4 }, { "do": "text", "text": "Тепло разливается по телу. Свечи вспыхивают ярче." }],
+        "fail": [{ "do": "damage", "amount": 2, "target": "all" }, { "do": "text", "text": "Свечи гаснут. Холод пробирает до костей." }] },
+      { "id": "steal", "label": "Забрать подношения",
+        "success": [{ "do": "gold", "amount": 25 }, { "do": "doom", "delta": 2 }, { "do": "spawn", "monsters": ["shade"] }] },
+      { "id": "leave", "label": "Уйти", "success": [] }
+    ]
+  },
+  {
+    "id": "rotten_bridge", "biomes": ["mountains", "swamp"],
+    "text": "Мост через расщелину прогнил. Внизу — темнота и шум воды.",
+    "options": [
+      { "id": "careful", "label": "Перейти осторожно", "check": { "attr": "DEX", "dc": 12 },
+        "success": [{ "do": "text", "text": "Доски скрипят, но держат." }, { "do": "xp", "amount": 15 }],
+        "fail": [{ "do": "damage", "amount": 3, "target": "leader" }, { "do": "text", "text": "Доска ломается — Ведущий повисает на руках и выбирается, ободрав ладони." }] },
+      { "id": "rope", "label": "Укрепить верёвкой", "check": { "attr": "STR", "dc": 12 },
+        "success": [{ "do": "text", "text": "Узлы держат. Отряд переходит без потерь." }, { "do": "xp", "amount": 20 }],
+        "fail": [{ "do": "light", "delta": -3 }, { "do": "text", "text": "Верёвка соскальзывает, приходится всё переделывать. Факел прогорает." }] }
+    ]
+  },
+  {
+    "id": "fox_in_snare", "biomes": ["forest"],
+    "text": "В силке бьётся рыжая лисица с умными глазами.",
+    "options": [
+      { "id": "free", "label": "Освободить",
+        "success": [{ "do": "text", "text": "Лисица отбегает, оглядывается — и ведёт вас короткой тропой." }, { "do": "reveal", "radius": 8 }] },
+      { "id": "take", "label": "Забрать как добычу",
+        "success": [{ "do": "gold", "amount": 5 }, { "do": "doom", "delta": 1 }] }
+    ]
+  },
+  {
+    "id": "mushroom_ring", "biomes": ["forest", "caves", "swamp"],
+    "text": "Кольцо светящихся грибов. Внутри круга тихо, как в склепе.",
+    "options": [
+      { "id": "eat", "label": "Съесть гриб", "check": { "attr": "SPI", "dc": 12 },
+        "success": [{ "do": "heal", "amount": 5, "target": "all" }, { "do": "light", "delta": 3 }, { "do": "text", "text": "Сладко. В глазах светлеет." }],
+        "fail": [{ "do": "poison", "amount": 2, "target": "all" }, { "do": "text", "text": "Горько. Очень горько." }] },
+      { "id": "gather", "label": "Собрать в мешок", "check": { "attr": "INT", "dc": 12 },
+        "success": [{ "do": "item", "itemId": "potion" }, { "do": "text", "text": "Из грибов выйдет неплохое снадобье." }],
+        "fail": [{ "do": "poison", "amount": 1, "target": "leader" }] },
+      { "id": "leave", "label": "Обойти круг", "success": [] }
+    ]
+  },
+  {
+    "id": "bandit_toll", "biomes": ["forest", "mountains"],
+    "text": "Дорогу перегородили разбойники: «Плати за проход — и ступай с миром».",
+    "options": [
+      { "id": "pay", "label": "Заплатить 20 золота", "cost": { "gold": 20 },
+        "success": [{ "do": "gold", "amount": -20 }, { "do": "text", "text": "Разбойники расступаются, ухмыляясь." }] },
+      { "id": "threaten", "label": "Пригрозить", "check": { "attr": "STR", "dc": 13 },
+        "success": [{ "do": "gold", "amount": 10 }, { "do": "text", "text": "Главарь бледнеет и сам платит вам «за беспокойство»." }],
+        "fail": [{ "do": "spawn", "monsters": ["bandit_brute", "bandit_archer"] }] },
+      { "id": "fight", "label": "Драться", "success": [{ "do": "spawn", "monsters": ["bandit_brute", "bandit_archer"] }] }
+    ]
+  },
+  {
+    "id": "sunken_chest", "biomes": ["swamp"],
+    "text": "Из трясины торчит угол окованного сундука.",
+    "options": [
+      { "id": "pull", "label": "Вытащить", "check": { "attr": "STR", "dc": 13 },
+        "success": [{ "do": "gold", "amount": 30 }, { "do": "item", "itemId": "potion" }, { "do": "text", "text": "Сундук выходит из грязи с чавканьем. Внутри сухо!" }],
+        "fail": [{ "do": "spawn", "monsters": ["leech_swarm"] }] },
+      { "id": "leave", "label": "Оставить", "success": [] }
+    ]
+  },
+  {
+    "id": "witch_cauldron", "biomes": ["swamp", "forest"],
+    "text": "Старуха помешивает котёл: «Глоток — и рана заживёт. Или нет. Хе-хе».",
+    "options": [
+      { "id": "drink", "label": "Выпить из котла", "check": { "attr": "SPI", "dc": 14 },
+        "success": [{ "do": "heal", "amount": 8, "target": "all" }, { "do": "text", "text": "Варево обжигает горло — и раны затягиваются на глазах." }],
+        "fail": [{ "do": "poison", "amount": 2, "target": "all" }, { "do": "doom", "delta": 1 }] },
+      { "id": "buy", "label": "Купить зелье за 15 золота", "cost": { "gold": 15 },
+        "success": [{ "do": "gold", "amount": -15 }, { "do": "item", "itemId": "potion" }] },
+      { "id": "leave", "label": "Уйти", "success": [] }
+    ]
+  },
+  {
+    "id": "echo_cave", "biomes": ["caves", "mountains"],
+    "text": "Пещера отвечает эхом на каждый шаг. В глубине что-то шуршит.",
+    "options": [
+      { "id": "shout", "label": "Крикнуть",
+        "success": [{ "do": "spawn", "monsters": ["carrion_crow", "carrion_crow"] }, { "do": "xp", "amount": 10 }] },
+      { "id": "listen", "label": "Прислушаться", "check": { "attr": "INT", "dc": 12 },
+        "success": [{ "do": "reveal", "radius": 8 }, { "do": "text", "text": "По эху понятно, куда ведут ходы." }],
+        "fail": [{ "do": "light", "delta": -2 }] }
+    ]
+  },
+  {
+    "id": "lantern_post", "biomes": ["any"],
+    "text": "Старый фонарный столб — знак Фонарного Города. На дне лампы ещё есть масло.",
+    "options": [
+      { "id": "light", "label": "Зажечь фонарь", "success": [{ "do": "light", "delta": 6 }, { "do": "text", "text": "Тёплый свет разгоняет тьму." }] },
+      { "id": "take", "label": "Снять лампу с собой", "success": [{ "do": "item", "itemId": "torch" }] }
+    ]
+  },
+  {
+    "id": "fresh_grave", "biomes": ["ruins"],
+    "text": "Свежевскрытая могила. Следы ведут в темноту.",
+    "options": [
+      { "id": "track", "label": "Пойти по следам", "check": { "attr": "DEX", "dc": 12 },
+        "success": [{ "do": "gold", "amount": 25 }, { "do": "text", "text": "Мародёры бросили добычу и сбежали." }],
+        "fail": [{ "do": "spawn", "monsters": ["bandit_brute"] }] },
+      { "id": "bury", "label": "Перезахоронить", "check": { "attr": "SPI", "dc": 11 },
+        "success": [{ "do": "heal", "amount": 3, "target": "all" }, { "do": "doom", "delta": -1 }, { "do": "text", "text": "Покой вернулся. Где-то вздыхают с облегчением." }],
+        "fail": [{ "do": "text", "text": "Земля не держится. Мёртвый не хочет лежать." }] }
+    ]
+  },
+  {
+    "id": "wall_map", "biomes": ["ruins", "caves"],
+    "text": "На стене нацарапана карта — чья-то последняя надежда выбраться.",
+    "options": [
+      { "id": "study", "label": "Изучить карту", "check": { "attr": "INT", "dc": 13 },
+        "success": [{ "do": "reveal", "radius": 10 }, { "do": "xp", "amount": 10 }],
+        "fail": [{ "do": "text", "text": "Линии путаются. Факел трещит." }, { "do": "light", "delta": -1 }] }
+    ]
+  },
+  {
+    "id": "spider_cocoon", "biomes": ["forest", "caves"],
+    "text": "В паутине висит кокон. Он шевелится — и изнутри доносится стон.",
+    "options": [
+      { "id": "cut", "label": "Разрезать кокон", "check": { "attr": "STR", "dc": 11 },
+        "success": [{ "do": "text", "text": "Спасённый охотник хватает арбалет: «Должник ваш!»" }, { "do": "ally", "name": "Охотник", "damage": 2 }],
+        "fail": [{ "do": "poison", "amount": 2, "target": "leader" }, { "do": "spawn", "monsters": ["forest_spider"] }] },
+      { "id": "burn", "label": "Сжечь паутину", "success": [{ "do": "light", "delta": -3 }, { "do": "xp", "amount": 15 }] }
+    ]
+  },
+  {
+    "id": "old_guide", "biomes": ["any"],
+    "text": "Старик с посохом: «За десять монет проведу короткой дорогой. Без меня проплутаете до утра».",
+    "options": [
+      { "id": "pay", "label": "Заплатить 10 золота", "cost": { "gold": 10 },
+        "success": [{ "do": "gold", "amount": -10 }, { "do": "reveal", "radius": 9 }, { "do": "light", "delta": 2 }] },
+      { "id": "refuse", "label": "Отказаться", "success": [{ "do": "text", "text": "Старик пожимает плечами и растворяется в темноте." }] }
+    ]
+  },
+  {
+    "id": "abandoned_camp", "biomes": ["any"],
+    "text": "Брошенный лагерь: остывший костёр, разорванные мешки.",
+    "options": [
+      { "id": "search", "label": "Обыскать лагерь", "check": { "attr": "INT", "dc": 11 },
+        "success": [{ "do": "item", "itemId": "potion" }, { "do": "gold", "amount": 10 }],
+        "fail": [{ "do": "damage", "amount": 2, "target": "random" }, { "do": "text", "text": "В мешке — капкан." }] },
+      { "id": "rest", "label": "Перевести дух", "success": [{ "do": "heal", "amount": 3, "target": "all" }, { "do": "light", "delta": -3 }] }
+    ]
+  }
+]

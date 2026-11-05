@@ -29,6 +29,20 @@
       "when": 1793870156341,
       "tag": "0003_close_legacy_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793877226948,
+      "tag": "0004_items_market",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793878729475,
+      "tag": "0005_tables_timers",
+      "breakpoints": true
     }
   ]
 }

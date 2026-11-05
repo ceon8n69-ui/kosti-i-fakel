@@ -1,1 +1,1 @@
-{ "extends": "../../tsconfig.base.json", "compilerOptions": { "outDir": "dist", "rootDir": "." }, "include": ["src", "balance.json", "items.json", "dungeons/*.json"], "exclude": ["src/**/*.test.ts"] }
+{ "extends": "../../tsconfig.base.json", "compilerOptions": { "outDir": "dist", "rootDir": "." }, "include": ["src", "balance.json", "items.json", "biomes.json", "events.json", "dungeons/*.json"], "exclude": ["src/**/*.test.ts"] }

@@ -3,101 +3,192 @@
   "note": "Арт подключается полем sprite (путь в public/). Если файла нет — рисуется заглушка кодом.",
   "miniatures": {
     "guardian": {
-      "sprite": "art/minis/guardian.png",
+      "sprite": "art/minis/guardian.webp",
       "placeholder": {
         "color": "#c9a24a",
         "glyph": "Стр"
       }
     },
     "rogue": {
-      "sprite": "art/minis/rogue.png",
+      "sprite": "art/minis/rogue.webp",
       "placeholder": {
         "color": "#5aa36b",
         "glyph": "Плт"
       }
     },
     "sorcerer": {
-      "sprite": "art/minis/sorcerer.png",
+      "sprite": "art/minis/sorcerer.webp",
       "placeholder": {
         "color": "#7d6bd6",
         "glyph": "Чар"
       }
     },
     "healer": {
-      "sprite": "art/minis/healer.png",
+      "sprite": "art/minis/healer.webp",
       "placeholder": {
         "color": "#d27a9c",
         "glyph": "Знх"
       }
     },
     "rat_swarm": {
-      "sprite": "art/minis/rat_swarm.png",
+      "sprite": "art/minis/rat_swarm.webp",
       "placeholder": {
         "color": "#8a7a68",
         "glyph": "Рой"
       }
     },
     "skeleton_guard": {
-      "sprite": "art/minis/skeleton_guard.png",
+      "sprite": "art/minis/skeleton_guard.webp",
       "placeholder": {
         "color": "#d8d2c0",
         "glyph": "Скл"
       }
     },
     "rotten_archer": {
-      "sprite": "art/minis/rotten_archer.png",
+      "sprite": "art/minis/rotten_archer.webp",
       "placeholder": {
         "color": "#6f8a52",
         "glyph": "Лук"
       }
     },
     "slime": {
-      "sprite": "art/minis/slime.png",
+      "sprite": "art/minis/slime.webp",
       "placeholder": {
         "color": "#59b39a",
         "glyph": "Слз"
       }
     },
     "shade": {
-      "sprite": "art/minis/shade.png",
+      "sprite": "art/minis/shade.webp",
       "placeholder": {
         "color": "#4b4f6b",
         "glyph": "Тнь"
       }
     },
     "cultist": {
-      "sprite": "art/minis/cultist.png",
+      "sprite": "art/minis/cultist.webp",
       "placeholder": {
         "color": "#9b3b3b",
         "glyph": "Клт"
       }
     },
     "rust_golem": {
-      "sprite": "art/minis/rust_golem.png",
+      "sprite": "art/minis/rust_golem.webp",
       "placeholder": {
         "color": "#a8613a",
         "glyph": "Глм"
       }
     },
     "rat_queen": {
-      "sprite": "art/minis/rat_queen.png",
+      "sprite": "art/minis/rat_queen.webp",
       "placeholder": {
         "color": "#a35b8c",
         "glyph": "Крл"
       }
     },
     "lamplighter": {
-      "sprite": "art/minis/lamplighter.png",
+      "sprite": "art/minis/lamplighter.webp",
       "placeholder": {
         "color": "#e0a43a",
         "glyph": "Фнр"
       }
     },
     "ghost": {
-      "sprite": "art/minis/ghost.png",
+      "sprite": "art/minis/ghost.webp",
       "placeholder": {
         "color": "#9fc3d6",
         "glyph": "Дух"
+      }
+    },
+    "wolf": {
+      "sprite": "art/minis/wolf.webp",
+      "placeholder": {
+        "color": "#6f6f6f",
+        "glyph": "Влк"
+      }
+    },
+    "alpha_wolf": {
+      "sprite": "art/minis/alpha_wolf.webp",
+      "placeholder": {
+        "color": "#2b2b2b",
+        "glyph": "Вжк"
+      }
+    },
+    "forest_spider": {
+      "sprite": "art/minis/forest_spider.webp",
+      "placeholder": {
+        "color": "#4a5a2a",
+        "glyph": "Пук"
+      }
+    },
+    "bandit_archer": {
+      "sprite": "art/minis/bandit_archer.webp",
+      "placeholder": {
+        "color": "#6b5434",
+        "glyph": "Рзб"
+      }
+    },
+    "bandit_brute": {
+      "sprite": "art/minis/bandit_brute.webp",
+      "placeholder": {
+        "color": "#7a4a2a",
+        "glyph": "Рзб"
+      }
+    },
+    "carrion_crow": {
+      "sprite": "art/minis/carrion_crow.webp",
+      "placeholder": {
+        "color": "#222",
+        "glyph": "Врн"
+      }
+    },
+    "rock_crawler": {
+      "sprite": "art/minis/rock_crawler.webp",
+      "placeholder": {
+        "color": "#77736a",
+        "glyph": "Скл"
+      }
+    },
+    "mountain_witch": {
+      "sprite": "art/minis/mountain_witch.webp",
+      "placeholder": {
+        "color": "#8a8f7a",
+        "glyph": "Вдм"
+      }
+    },
+    "leech_swarm": {
+      "sprite": "art/minis/leech_swarm.webp",
+      "placeholder": {
+        "color": "#3a4a2a",
+        "glyph": "Пвк"
+      }
+    },
+    "bog_lurker": {
+      "sprite": "art/minis/bog_lurker.webp",
+      "placeholder": {
+        "color": "#4a4a30",
+        "glyph": "Блт"
+      }
+    },
+    "will_o_wisp": {
+      "sprite": "art/minis/will_o_wisp.webp",
+      "placeholder": {
+        "color": "#7fd6c8",
+        "glyph": "Огн"
+      }
+    },
+    "stone_sentinel": {
+      "sprite": "art/minis/stone_sentinel.webp",
+      "placeholder": {
+        "color": "#8a8478",
+        "glyph": "Стж"
+      }
+    },
+    "grave_knight": {
+      "sprite": "art/minis/grave_knight.webp",
+      "placeholder": {
+        "color": "#2a2a32",
+        "glyph": "Рцр"
       }
     }
   },

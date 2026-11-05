@@ -78,6 +78,8 @@ export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
       s.round = 0;
       s.encounterId = null;
       s.monsters = [];
+      // Союзник уходит после стычки, в которой помог.
+      s.allies = [];
       for (const h of s.heroes) {
         h.block = 0;
         h.roll = h.dice.map(() => null);
@@ -89,6 +91,20 @@ export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
     }
     case "REWARDS":
     case "SESSION_ENTERED":
+      break;
+    case "TURN_TIMED_OUT":
+      break;
+    case "OPTION_CHOSEN":
+      obj(s, ev.objectId).used = true;
+      break;
+    case "GOLD_CHANGED":
+      s.bag.gold = ev.gold;
+      break;
+    case "ALLY_JOINED":
+      s.allies.push({ name: ev.name, damage: ev.damage });
+      break;
+    case "XP_BONUS":
+      s.bonusXp += ev.amount;
       break;
     case "TRAP_DISARMED":
       obj(s, ev.objectId).state = "disarmed";
@@ -123,12 +139,13 @@ export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
       s.round = ev.round;
       s.step = "roll";
       for (const h of s.heroes) {
-        h.block = 0;
+        // Снаряжение с блоком даёт его в начале каждого раунда.
+        h.block = h.status === "up" ? h.mods.block : 0;
         h.roll = h.dice.map(() => null);
         h.plan = [];
         h.ready = false;
         h.taunt = false;
-        h.freeRerolls = 1;
+        h.freeRerolls = balance.combat.freeRerolls + h.mods.rerolls;
       }
       for (const m of s.monsters) if (m.alive) m.age++;
       break;

@@ -2,7 +2,8 @@ import { balance, itemById } from "@kf/content";
 import { clone } from "./clone.js";
 import { resolveRound, rollHeroDice } from "./combat.js";
 import { Ctx, fail } from "./ctx.js";
-import { canPath, disarm, enterDungeon, force, move, rest, search, useError, useItem, useObject } from "./explore.js";
+import { canPath, chooseOption, disarm, enterDungeon, force, move, rest, search, useError, useItem, useObject } from "./explore.js";
+import { autoTurn } from "./auto.js";
 import { effectiveFace, legalTargets, upHeroes } from "./faces.js";
 import { cheb } from "./grid.js";
 import { hero as getHero, reduceInPlace } from "./reducer.js";
@@ -38,6 +39,12 @@ export function openSession(first: GameEvent, rng: Rng): GameEvent[] {
 function validate(s: SessionState, cmd: Command): CommandError | null {
   if (s.phase === "ended") return fail("session_ended");
   if (cmd.expectedSeq !== s.seq) return fail("stale_seq", `expected ${s.seq}`);
+  if (cmd.type === "TURN_TIMEOUT" || cmd.type === "LEADER_TIMEOUT") {
+    if (cmd.actorId !== "system") return fail("system_only");
+    if (cmd.type === "TURN_TIMEOUT") return s.phase === "combat" && upHeroes(s).some((h) => !h.ready) ? null : fail("nothing_to_do");
+    return s.phase === "explore" && upHeroes(s).length > 1 ? null : fail("nothing_to_do");
+  }
+  if (cmd.actorId === "system") return fail("system_only");
   const h = s.heroes.find((x) => x.id === cmd.heroId);
   if (!h) return fail("no_hero");
   if (h.ownerId !== cmd.actorId) return fail("not_your_hero");
@@ -67,6 +74,18 @@ function validate(s: SessionState, cmd: Command): CommandError | null {
     }
     case "SEARCH":
       return explore ? null : fail("wrong_phase");
+    case "CHOOSE_OPTION": {
+      if (!explore) return fail("wrong_phase");
+      const o = s.objects.find((x) => x.id === cmd.objectId);
+      if (!o || o.type !== "event") return fail("no_object");
+      const e = useError(s, o);
+      if (e && e !== "use_choose") return fail(e);
+      const ev = s.def.events.find((x) => x.id === o.eventId);
+      const opt = ev?.options.find((x) => x.id === cmd.optionId);
+      if (!opt) return fail("bad_option");
+      if (opt.cost && s.bag.gold < opt.cost.gold) return fail("not_enough_gold");
+      return null;
+    }
     case "REST": {
       if (!explore) return fail("wrong_phase");
       const o = s.objects.find((x) => x.id === cmd.objectId);
@@ -80,7 +99,7 @@ function validate(s: SessionState, cmd: Command): CommandError | null {
     }
     case "USE_ITEM": {
       const it = itemById(cmd.itemId);
-      if (!it || !s.bag.items.includes(cmd.itemId)) return fail("no_item");
+      if (!it || it.kind !== "consumable" || !s.bag.items.includes(cmd.itemId)) return fail("no_item");
       if (s.phase === "combat" && !it.combat) return fail("not_in_combat");
       if (s.phase === "combat" && h.ready) return fail("already_ready");
       if (it.effect === "heal") {
@@ -134,6 +153,30 @@ function validate(s: SessionState, cmd: Command): CommandError | null {
 function execute(ctx: Ctx, cmd: Command): void {
   const s = ctx.s;
   switch (cmd.type) {
+    case "TURN_TIMEOUT": {
+      // Простой алгоритм из ТЗ 4.9: грани распределяются автоматически, перебросов нет.
+      const late = upHeroes(s).filter((h) => !h.ready).map((h) => h.id);
+      ctx.emit({ type: "TURN_TIMED_OUT", heroIds: late });
+      for (const id of late) {
+        for (let guard = 0; guard < 8; guard++) {
+          if (ctx.ended || s.phase !== "combat") return;
+          const h = s.heroes.find((x) => x.id === id)!;
+          if (h.status !== "up" || h.ready) break;
+          const body = autoTurn(s, id).find((c) => !(c.type === "ASSIGN_FACE" && h.plan.some((a) => a.die === c.die && a.target === c.target && a.star === c.star)));
+          if (!body) break;
+          const sub = { ...body, actorId: h.ownerId, expectedSeq: s.seq, commandId: `${cmd.commandId}:${guard}` } as Command;
+          if (validate(s, sub)) break;
+          execute(ctx, sub);
+        }
+      }
+      return;
+    }
+    case "LEADER_TIMEOUT": {
+      const up = upHeroes(s);
+      const i = up.findIndex((h) => h.id === s.leaderId);
+      ctx.emit({ type: "LEADER_CHANGED", heroId: up[(i + 1) % up.length]!.id });
+      return;
+    }
     case "MOVE":
       move(ctx, canPath(s, cmd.x, cmd.y)!);
       return;
@@ -146,6 +189,9 @@ function execute(ctx: Ctx, cmd: Command): void {
     }
     case "SEARCH":
       search(ctx, cmd.heroId);
+      return;
+    case "CHOOSE_OPTION":
+      chooseOption(ctx, cmd.heroId, s.objects.find((o) => o.id === cmd.objectId)!, cmd.optionId);
       return;
     case "REST":
       rest(ctx, s.objects.find((o) => o.id === cmd.objectId)!);

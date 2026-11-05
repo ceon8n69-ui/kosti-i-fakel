@@ -27,6 +27,8 @@ export interface VisibleState {
   /** Замеченные, но не побеждённые враги на карте. */
   encounters: { id: string; kinds: string[]; x: number; y: number }[];
   bag: SessionState["bag"];
+  biome: string;
+  allies: SessionState["allies"];
   story: string[];
   ended: SessionState["ended"];
 }
@@ -65,6 +67,8 @@ export function project(s: SessionState, viewerId: string): VisibleState {
       })
       .map((e) => ({ id: e.id, kinds: e.monsters, x: Math.floor(e.zone.x + e.zone.w / 2), y: Math.floor(e.zone.y + e.zone.h / 2) })),
     bag: clone(s.bag),
+    biome: s.biome,
+    allies: clone(s.allies),
     story: [...s.story],
     ended: s.ended,
   };

@@ -10,7 +10,8 @@ import type { Assignment, Hero, Intent, Monster, SessionState } from "./types.js
 export function createMonster(kind: string, id: string, partySize: number, hpOverride?: number): Monster {
   const def = balance.monsters.find((m) => m.id === kind);
   if (!def) throw new Error(`unknown monster ${kind}`);
-  const scale = balance.partyHpScale[String(Math.min(4, Math.max(1, partySize)))] ?? 1;
+  const key = String(Math.min(4, Math.max(1, partySize)));
+  const scale = (def.boss ? balance.bossHpScale[key] : balance.partyHpScale[key]) ?? 1;
   const hp = Math.max(1, Math.round((hpOverride ?? def.hp) * scale));
   return { id, kind, hp, maxHp: hp, armor: def.armor, row: def.row, boss: def.boss, block: 0, poison: 0, alive: true, age: 0, intents: [] };
 }
@@ -137,7 +138,9 @@ export function rollHeroDice(ctx: Ctx, heroId: string, dice: number[], kind: "ro
 
 function damageMonster(ctx: Ctx, m: Monster, face: Face, sourceId: string): void {
   if (!m.alive || face.t === "STAR" || face.t === "SKULL") return;
-  const raw = face.n;
+  const src = ctx.s.heroes.find((h) => h.id === sourceId);
+  const bonus = src && (face.t === "M" || face.t === "L" || face.t === "I") ? src.mods.dmg[face.t] : 0;
+  const raw = face.n + bonus;
   const armor = face.t === "I" ? 0 : Math.min(m.armor, raw);
   const afterArmor = raw - armor;
   const blocked = Math.min(m.block, afterArmor);
@@ -145,7 +148,7 @@ function damageMonster(ctx: Ctx, m: Monster, face: Face, sourceId: string): void
   const kind = face.t === "M" ? "melee" : face.t === "L" ? "ranged" : "magic";
   ctx.emit({ type: "DAMAGE_DEALT", sourceId, targetId: m.id, amount, blocked, armor, kind });
   if (face.poison && getMonster(ctx.s, m.id).alive && getMonster(ctx.s, m.id).hp > 0)
-    ctx.emit({ type: "POISON_CHANGED", targetId: m.id, poison: getMonster(ctx.s, m.id).poison + face.poison });
+    ctx.emit({ type: "POISON_CHANGED", targetId: m.id, poison: getMonster(ctx.s, m.id).poison + face.poison + (src?.mods.poison ?? 0) });
   if (getMonster(ctx.s, m.id).hp === 0) killMonster(ctx, m.id);
 }
 
@@ -164,6 +167,9 @@ function endEncounter(ctx: Ctx): void {
   const id = ctx.s.encounterId ?? "encounter";
   // Упавшие после боя приходят в себя с 1 здоровьем.
   for (const h of ctx.s.heroes.filter((x) => x.status === "downed")) ctx.emit({ type: "HERO_RAISED", heroId: h.id, hp: 1 });
+  // Снаряжение «лечение после стычки».
+  for (const h of ctx.s.heroes.filter((x) => x.status === "up" && x.mods.healAfter > 0 && x.hp < x.maxHp))
+    ctx.emit({ type: "HEALED", targetId: h.id, amount: Math.min(h.mods.healAfter, h.maxHp - h.hp), sourceId: "equipment" });
   ctx.emit({ type: "ENCOUNTER_ENDED", encounterId: id });
   fireRules(ctx, { on: "monster_died", encounterId: id });
 }
@@ -205,6 +211,16 @@ export function resolveRound(ctx: Ctx): void {
       target ??= (face.t === "M" ? meleeTargets(s) : aliveMonsters(s))[0];
       if (target) damageMonster(ctx, target, face, h.id);
     }
+  }
+
+  // 2б. Союзники из событий бьют случайного врага.
+  for (const ally of s.allies) {
+    const alive = aliveMonsters(s);
+    if (!alive.length) break;
+    const t = alive.length === 1 ? alive[0]! : alive[ctx.rng.int(alive.length)]!;
+    const amount = Math.min(t.hp, ally.damage);
+    ctx.emit({ type: "DAMAGE_DEALT", sourceId: `ally:${ally.name}`, targetId: t.id, amount, blocked: 0, armor: 0, kind: "ally" });
+    if (getMonster(s, t.id).hp === 0) killMonster(ctx, t.id);
   }
 
   // 3. Действия живых врагов.

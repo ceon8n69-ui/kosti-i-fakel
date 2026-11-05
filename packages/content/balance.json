@@ -898,5 +898,39 @@
   "startConsumables": [
    "potion"
   ]
+ },
+ "bossHpScale": {
+  "1": 0.3,
+  "2": 0.5,
+  "3": 0.75,
+  "4": 1
+ },
+ "loot": {
+  "rarityWeights": {
+   "1": {
+    "common": 70,
+    "rare": 26,
+    "epic": 4
+   },
+   "2": {
+    "common": 50,
+    "rare": 38,
+    "epic": 12
+   },
+   "3": {
+    "common": 30,
+    "rare": 48,
+    "epic": 22
+   }
+  },
+  "slots": {
+   "weapon": 1,
+   "armor": 1,
+   "relic": 2
+  },
+  "marketCommissionPercent": 5,
+  "marketMinPrice": 1,
+  "marketMaxPrice": 100000,
+  "marketMaxListings": 10
  }
 }

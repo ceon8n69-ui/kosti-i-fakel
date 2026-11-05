@@ -35,6 +35,18 @@ export interface Hero {
   taunt: boolean;
   /** id постоянного героя в БД. */
   dbId?: string;
+  /** Надетое снаряжение (ключи каталога) и его суммарные эффекты. */
+  equipment: string[];
+  mods: HeroMods;
+}
+
+export interface HeroMods {
+  dmg: { M: number; L: number; I: number };
+  block: number;
+  healAfter: number;
+  rerolls: number;
+  poison: number;
+  light: number;
 }
 
 export type IntentKind = "attack" | "block" | "doom" | "charge" | "summon" | "drain" | "heal";
@@ -93,6 +105,14 @@ export interface RObject {
   npcId?: string;
   radius?: number;
   variable?: string;
+  /** Событие с выбором: то, что видит игрок (без исходов). */
+  event?: EventView;
+  eventId?: string;
+}
+
+export interface EventView {
+  text: string;
+  options: { id: string; label: string; check?: { attr: Attr; dc: number }; cost?: { gold: number } }[];
 }
 
 export interface EncounterState {
@@ -138,6 +158,11 @@ export interface SessionState {
   bag: Bag;
   /** Сумма стоимости побеждённых монстров — для опыта. */
   killed: number;
+  /** Опыт за события и испытания. */
+  bonusXp: number;
+  /** Союзники, помогающие в следующей стычке. */
+  allies: { name: string; damage: number }[];
+  biome: string;
   /** Последние тексты истории (видны всем). */
   story: string[];
   nextId: number;
@@ -159,6 +184,10 @@ export type Command =
   | (Base & { type: "REST"; heroId: string; objectId: string })
   | (Base & { type: "RETREAT"; heroId: string })
   | (Base & { type: "USE_ITEM"; heroId: string; itemId: string; targetId?: string })
+  | (Base & { type: "CHOOSE_OPTION"; heroId: string; objectId: string; optionId: string })
+  /** Системные команды таймера (actorId = "system"): ход за тех, кто не успел, и смена Ведущего. */
+  | (Base & { type: "TURN_TIMEOUT"; heroId: "system" })
+  | (Base & { type: "LEADER_TIMEOUT"; heroId: "system" })
   | (Base & { type: "CHANGE_ROW"; heroId: string; row: Row })
   | (Base & { type: "ROLL_DICE"; heroId: string })
   | (Base & { type: "REROLL"; heroId: string; dice: number[] })
@@ -173,7 +202,7 @@ export type CommandBody = Command extends infer C ? (C extends Command ? Omit<C,
 
 // ───────── События ─────────
 
-export type DamageKind = "melee" | "ranged" | "magic" | "poison" | "trap" | "skulls" | "monster";
+export type DamageKind = "melee" | "ranged" | "magic" | "poison" | "trap" | "skulls" | "monster" | "ally";
 
 type E<T extends string, P = object> = { seq: number; type: T; draws?: Draw[] } & P;
 
@@ -200,6 +229,11 @@ export type GameEvent =
   | E<"ENCOUNTER_SPOTTED", { encounterId: string; kinds: string[]; x: number; y: number }>
   | E<"ENCOUNTER_STARTED", { encounterId: string; kinds: string[] }>
   | E<"ENCOUNTER_ENDED", { encounterId: string }>
+  | E<"TURN_TIMED_OUT", { heroIds: string[] }>
+  | E<"OPTION_CHOSEN", { objectId: string; optionId: string; heroId: string }>
+  | E<"GOLD_CHANGED", { delta: number; gold: number }>
+  | E<"ALLY_JOINED", { name: string; damage: number }>
+  | E<"XP_BONUS", { amount: number }>
   | E<"REWARDS", { xp: number; gold: number; items: string[]; reason: "victory" | "defeat" | "retreat" }>
   | E<"MONSTER_SPAWNED", { monster: Monster; reason: "encounter" | "split" | "summon" }>
   | E<"ROUND_STARTED", { round: number }>
@@ -250,4 +284,5 @@ export interface VisibleObject {
   used?: boolean;
   npcId?: string;
   radius?: number;
+  event?: EventView;
 }

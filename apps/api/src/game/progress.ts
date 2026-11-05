@@ -3,7 +3,9 @@ import { balance, officialDungeons } from "@kf/content";
 import type { SessionState } from "@kf/engine";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db/client.js";
-import { goldLedger, heroes, sessions } from "../db/schema.js";
+import { goldLedger, heroes, items, sessions } from "../db/schema.js";
+import { grantItems } from "./inventory.js";
+import { isEquipment } from "@kf/engine";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Exec = Db | Tx;
@@ -55,6 +57,14 @@ export async function clearedDungeons(db: Exec, userId: string): Promise<Set<str
     .from(sessions)
     .where(and(eq(sessions.ownerId, userId), eq(sessions.endedReason, "victory")));
   return new Set(rows.map((r) => r.id));
+}
+
+export const EXPEDITION_BIOMES = ["forest", "mountains", "swamp", "ruins", "caves"] as const;
+export const tierForLevel = (level: number): 1 | 2 | 3 => (level <= 3 ? 1 : level <= 6 ? 2 : 3);
+
+/** Экспедиции открываются после первого обучающего подземелья. */
+export async function expeditionsUnlocked(db: Exec, userId: string): Promise<boolean> {
+  return (await clearedDungeons(db, userId)).has(officialDungeons[0]!.id);
 }
 
 /** Каталог официальных подземелий: обучение выдаётся строго по порядку. */
@@ -113,13 +123,21 @@ export async function applyResults(tx: Tx, sessionId: string, s: SessionState, r
     }
     const dead = sh.status === "dead";
     // Расходники героев ушли в общую сумку похода. Оставшиеся (кроме факелов) делятся по кругу, до 4 на героя.
-    const pool = reward.reason === "defeat" ? [] : reward.items.filter((i) => i !== "torch");
+    const pool = reward.reason === "defeat" ? [] : reward.items.filter((i) => i !== "torch" && !isEquipment(i));
     const idx = s.heroes.indexOf(sh);
     const mine = pool.filter((_, i) => i % s.heroes.length === idx).slice(0, balance.progression.consumableSlots);
     await tx
       .update(heroes)
       .set({ level, xp, maxHp, consumables: mine, status: dead ? "dead" : "alive" })
       .where(eq(heroes.id, row.id));
+    // Погибший герой теряет надетое снаряжение (позже оно перейдёт к Павшему).
+    if (dead) await tx.delete(items).where(eq(items.equippedHeroId, row.id));
+  }
+  // Найденное снаряжение — игрокам по кругу.
+  if (reward.reason !== "defeat") {
+    const found = reward.items.filter((i) => isEquipment(i));
+    const owners2 = s.heroes.map((h) => h.ownerId);
+    for (let i = 0; i < found.length; i++) await grantItems(tx, owners2[i % owners2.length]!, [found[i]!], `session:${sessionId}`);
   }
 }
 

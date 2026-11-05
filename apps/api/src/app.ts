@@ -23,6 +23,7 @@ export interface AppDeps {
   now?: () => number;
   game?: GameService;
   hub?: Hub;
+  notifier?: import("./game/routes.js").Notifier;
 }
 
 type UserRow = typeof users.$inferSelect;
@@ -49,6 +50,7 @@ declare module "fastify" {
   }
   interface FastifyInstance {
     game: GameService;
+    hub: Hub;
   }
 }
 
@@ -158,7 +160,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const game = deps.game ?? new GameService(db);
   const hub = deps.hub ?? new Hub();
   app.decorate("game", game);
-  await gameRoutes(app, { db, game, hub, secret: env.SESSION_SECRET, nowSec, requireSession });
+  await gameRoutes(app, { db, game, hub, secret: env.SESSION_SECRET, botUsername: env.BOT_USERNAME, nowSec, requireSession, notifier: deps.notifier });
 
   if (deps.botWebhook) {
     const hook = deps.botWebhook;

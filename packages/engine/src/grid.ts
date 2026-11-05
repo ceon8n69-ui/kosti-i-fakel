@@ -150,6 +150,7 @@ export function visibleObject(o: RObject): VisibleObject {
   if (o.used !== undefined) v.used = o.used;
   if (o.npcId !== undefined) v.npcId = o.npcId;
   if (o.radius !== undefined) v.radius = o.radius;
+  if (o.event !== undefined) v.event = o.event;
   return v;
 }
 

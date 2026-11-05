@@ -1,5 +1,8 @@
 import { reduceInPlace, type GameEvent, type SessionState, type VisibleState } from "@kf/engine";
+import { itemById } from "@kf/content";
 import { play } from "../audio/sound";
+
+export const itemName = (id: string) => itemById(id)?.name ?? id;
 import { haptic, hapticImpact } from "../lib/telegram";
 import type { Stage3D, UnitVis } from "../scene/stage3d";
 
@@ -146,16 +149,33 @@ export async function animateEvent(ev: GameEvent, d: VisibleState, stage: Stage3
     case "ITEM_FOUND": {
       apply();
       const o = d.objects.find((x) => x.id === ev.objectId);
-      const parts = [ev.gold ? `+${ev.gold} ${ui.t("bag.gold")}` : "", ...ev.items.map((i) => `+${ui.t(`item.${i}`)}`), ...ev.keys.map(() => `+${ui.t("bag.key")}`)].filter(Boolean);
-      if (o) parts.forEach((p, i) => setTimeout(() => ui.cellFloater(o.x, o.y, p, "fl-loot"), i * 250));
+      const parts = [ev.gold ? `+${ev.gold} ${ui.t("bag.gold")}` : "", ...ev.items.map((i) => `+${itemName(i)}`), ...ev.keys.map(() => `+${ui.t("bag.key")}`)].filter(Boolean);
+      const at = o ?? { x: d.pos.x, y: d.pos.y };
+      parts.forEach((p, i) => setTimeout(() => ui.cellFloater(at.x, at.y, p, "fl-loot"), i * 250));
+      if (ev.items.some((i) => itemById(i)?.kind === "equipment")) ui.toast(`${ui.t("toast.equipFound")}: ${ev.items.filter((i) => itemById(i)?.kind === "equipment").map(itemName).join(", ")}`, "gold");
       play("heal");
       haptic("success");
       await wait(300);
       return;
     }
+    case "OPTION_CHOSEN":
+      apply();
+      return;
+    case "GOLD_CHANGED":
+      apply();
+      ui.floater(d.leaderId, `${ev.delta > 0 ? "+" : ""}${ev.delta} ${ui.t("bag.gold")}`, "fl-loot");
+      return;
+    case "ALLY_JOINED":
+      apply();
+      ui.toast(`${ev.name} ${ui.t("toast.ally")}`, "gold");
+      return;
+    case "XP_BONUS":
+      apply();
+      ui.toast(`+${ev.amount} ${ui.t("end.xp")}`, "good");
+      return;
     case "ITEM_USED":
       apply();
-      ui.toast(`${ui.t(`item.${ev.itemId}`)}`, "good");
+      ui.toast(itemName(ev.itemId), "good");
       return;
     case "PARTY_RESTED":
       apply();

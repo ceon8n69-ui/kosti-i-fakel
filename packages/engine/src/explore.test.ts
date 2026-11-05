@@ -69,7 +69,7 @@ describe("исследование подземелья", () => {
       s.seen = s.seen.map((r) => "1".repeat(r.length));
     });
     const ev = t.ok({ type: "INTERACT", heroId: "h1", objectId: "chest_store", verb: "use" });
-    expect(ev.find((e) => e.type === "ITEM_FOUND")).toMatchObject({ gold: 15, items: ["potion"] });
+    expect(ev.find((e) => e.type === "ITEM_FOUND")).toMatchObject({ gold: 15, items: ["potion", "brass_lantern"] });
     expect(t.state.bag.gold).toBe(15);
     expect(t.run({ type: "INTERACT", heroId: "h1", objectId: "chest_store", verb: "use" }).errors[0]!.code).toBe("empty");
   });

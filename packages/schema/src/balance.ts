@@ -107,6 +107,8 @@ export const BalanceSchema = z.object({
   rewards: z.object({ xpPerMonsterCost: int, xpVictoryPerTier: int, xpRetreatShare: int }),
   explore: z.object({ searchRadius: int, trapSpotAttr: attr, adjacent: int, maxPathCells: int, startConsumables: z.array(z.string()) }),
   partyHpScale: z.record(z.string(), z.number()),
+  /** Боссы зовут подмогу и бьют сильнее — для малых партий их здоровье режется сильнее. */
+  bossHpScale: z.record(z.string(), z.number()),
   tiers: z.array(
     z.object({ tier: int, heroLevels: z.tuple([int, int]), budget: int, maxPerRoom: int, maxMap: int, minHoard: int }),
   ),
@@ -136,6 +138,14 @@ export const BalanceSchema = z.object({
     minBotWinRatePercent: int,
     freePublishedSlots: int,
   }),
+  loot: z.object({
+    rarityWeights: z.record(z.string(), z.object({ common: int, rare: int, epic: int })),
+    slots: z.object({ weapon: int, armor: int, relic: int }),
+    marketCommissionPercent: int,
+    marketMinPrice: int,
+    marketMaxPrice: int,
+    marketMaxListings: int,
+  }),
   fallen: z.object({ maxPerDungeon: int, powerCapMultiplier: z.number(), heirLevelPenalty: int }),
   classes: z.array(ClassSchema),
   monsters: z.array(MonsterSchema),
@@ -158,11 +168,40 @@ export const ScenarioSchema = z.object({
 });
 export type Scenario = z.infer<typeof ScenarioSchema>;
 
-export const ItemSchema = z.object({
-  id: z.string(),
-  kind: z.enum(["consumable", "relic", "face"]),
-  effect: z.enum(["heal", "light", "retreat"]),
-  amount: int,
-  combat: z.boolean(),
-});
+/** Постоянный эффект снаряжения. */
+export const ItemEffectSchema = z.discriminatedUnion("t", [
+  z.object({ t: z.literal("hp"), n: int.min(1).max(20) }),
+  z.object({ t: z.literal("stat"), attr, n: int.min(1).max(2) }),
+  z.object({ t: z.literal("dmg"), face: z.enum(["M", "L", "I"]), n: int.min(1).max(3) }),
+  z.object({ t: z.literal("block"), n: int.min(1).max(5) }),
+  z.object({ t: z.literal("heal_after"), n: int.min(1).max(10) }),
+  z.object({ t: z.literal("light"), n: int.min(1).max(15) }),
+  z.object({ t: z.literal("reroll"), n: int.min(1).max(2) }),
+  z.object({ t: z.literal("poison"), n: int.min(1).max(2) }),
+]);
+export type ItemEffect = z.infer<typeof ItemEffectSchema>;
+
+export const ItemSchema = z.discriminatedUnion("kind", [
+  z.object({
+    id: z.string(),
+    kind: z.literal("consumable"),
+    name: z.string(),
+    desc: z.string(),
+    effect: z.enum(["heal", "light", "retreat"]),
+    amount: int,
+    combat: z.boolean(),
+  }),
+  z.object({
+    id: z.string(),
+    kind: z.literal("equipment"),
+    slot: z.enum(["weapon", "armor", "relic"]),
+    rarity: z.enum(["common", "rare", "epic"]),
+    /** С какого уровня подземелий падает. */
+    tier: int.min(1).max(3),
+    name: z.string(),
+    desc: z.string(),
+    effects: z.array(ItemEffectSchema).min(1).max(4),
+  }),
+]);
 export type Item = z.infer<typeof ItemSchema>;
+export type EquipmentItem = Extract<Item, { kind: "equipment" }>;

@@ -258,3 +258,25 @@ describe("раунд", () => {
     expect(replay(t.events)).toEqual(t.state);
   });
 });
+
+describe("таймер хода", () => {
+  it("TURN_TIMEOUT ходит за не успевших и разрешает раунд", () => {
+    const t = new Table("00000000000000aa", [
+      { ownerId: "u1", classId: "guardian", name: "А" },
+      { ownerId: "u2", classId: "rogue", name: "Б" },
+    ]);
+    t.ok({ type: "MOVE", heroId: "h1", x: 3, y: 2 });
+    t.ok({ type: "ROLL_DICE", heroId: "h1" });
+    t.ok({ type: "READY", heroId: "h1", ready: true });
+    const round = t.state.round;
+    expect(t.run({ type: "TURN_TIMEOUT", heroId: "system" } as never, "u1").errors[0]!.code).toBe("system_only");
+    const ev = t.ok({ type: "TURN_TIMEOUT", heroId: "system" } as never, "system");
+    expect(ev[0]).toMatchObject({ type: "TURN_TIMED_OUT", heroIds: ["h2"] });
+    expect(t.types(ev)).toContain("ASSIGNMENTS_REVEALED");
+    expect(t.state.round === round + 1 || t.state.phase !== "combat").toBe(true);
+  });
+  it("игрок не может отправить системную команду", () => {
+    const t = new Table();
+    expect(t.run({ type: "LEADER_TIMEOUT", heroId: "system" } as never, "u1").errors[0]!.code).toBe("system_only");
+  });
+});

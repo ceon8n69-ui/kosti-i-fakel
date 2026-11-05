@@ -10,3 +10,5 @@ export { verifyJournal, type VerifyReport } from "./verify.js";
 export { autoTurn } from "./auto.js";
 export { effectiveFace, legalTargets, aliveMonsters, upHeroes, meleeTargets } from "./faces.js";
 export { botStep } from "./bot.js";
+export { generateExpedition, type ExpeditionParams } from "./generate.js";
+export { rollEquipment, modsOf, isEquipment, equipmentItems } from "./loot.js";

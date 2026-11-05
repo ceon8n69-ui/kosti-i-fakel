@@ -9,6 +9,8 @@ export interface BotConfig {
   appShortName: string;
   /** https-адрес Mini App. Если задан, в личке используется кнопка web_app. */
   webAppUrl?: string;
+  /** Создать стол для группы: возвращает id стола (параметр t_<id>). */
+  createTable?: (from: { id: number; first_name: string; last_name?: string; username?: string; language_code?: string }, chatId: number) => Promise<string | null>;
 }
 
 const START_PARAM_RE = /^(t|d|f|r)_[A-Za-z0-9_-]{1,60}$/;
@@ -45,9 +47,10 @@ export function createBot(cfg: BotConfig): Bot {
 
   bot.command("table", async (ctx) => {
     if (ctx.chat.type === "private") return ctx.reply(t("table.privateOnly"));
-    // Этап 0: стол ещё не создаётся в БД, кнопка просто открывает игру. Полная логика — этап 2.
+    const id = ctx.from && cfg.createTable ? await cfg.createTable(ctx.from, ctx.chat.id).catch(() => null) : null;
+    // В группах — только прямая ссылка на Mini App (кнопки web_app там не работают).
     await ctx.reply(t("table.created"), {
-      reply_markup: new InlineKeyboard().url(t("table.join"), directLink(cfg)),
+      reply_markup: new InlineKeyboard().url(t("table.join"), directLink(cfg, id ? `t_${id}` : undefined)),
     });
   });
 
@@ -68,6 +71,11 @@ export const BOT_COMMANDS = [
   { command: "terms", description: "Условия использования" },
   { command: "paysupport", description: "Помощь с оплатой" },
 ];
+
+/** Напоминание игроку в личку с кнопкой в игру. */
+export async function sendTurnReminder(bot: Bot, cfg: BotConfig, telegramId: number, text: string, startParam?: string): Promise<void> {
+  await bot.api.sendMessage(telegramId, text, { reply_markup: new InlineKeyboard().url(t("start.open"), directLink(cfg, startParam)) });
+}
 
 export async function startWebhookBot(cfg: BotConfig, webhookUrl: string, secret: string) {
   const bot = createBot(cfg);

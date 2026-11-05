@@ -5,6 +5,7 @@ interface TgWebApp {
   version: string;
   platform: string;
   ready(): void;
+  openTelegramLink?(url: string): void;
   expand(): void;
   isVersionAtLeast(v: string): boolean;
   disableVerticalSwipes?(): void;
@@ -73,4 +74,12 @@ export function hapticImpact(style: "light" | "medium" | "heavy" | "soft" = "lig
   if (now - lastImpact < 40) return;
   lastImpact = now;
   tg()?.HapticFeedback?.impactOccurred(style);
+}
+
+/** Поделиться ссылкой через выбор чата Telegram (вне Telegram — копируем в буфер). */
+export function shareLink(url: string, text: string): void {
+  const share = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  const w = tg();
+  if (w?.openTelegramLink) w.openTelegramLink(share);
+  else void navigator.clipboard?.writeText(url);
 }

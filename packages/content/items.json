@@ -1,5 +1,402 @@
 [
-  { "id": "potion", "kind": "consumable", "effect": "heal", "amount": 5, "combat": true },
-  { "id": "torch", "kind": "consumable", "effect": "light", "amount": 8, "combat": true },
-  { "id": "return_scroll", "kind": "consumable", "effect": "retreat", "amount": 0, "combat": false }
+ {
+  "id": "potion",
+  "kind": "consumable",
+  "name": "Зелье лечения",
+  "desc": "+5 здоровья или поднять павшего",
+  "effect": "heal",
+  "amount": 5,
+  "combat": true
+ },
+ {
+  "id": "torch",
+  "kind": "consumable",
+  "name": "Факел",
+  "desc": "+8 к Факелу",
+  "effect": "light",
+  "amount": 8,
+  "combat": true
+ },
+ {
+  "id": "return_scroll",
+  "kind": "consumable",
+  "name": "Свиток возвращения",
+  "desc": "Немедленно уйти с найденным",
+  "effect": "retreat",
+  "amount": 0,
+  "combat": false
+ },
+ {
+  "id": "rusty_sword",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Ржавый меч",
+  "desc": "+1 к ближнему урону",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "M",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "hunter_bow",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Охотничий лук",
+  "desc": "+1 к дальнему урону",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "L",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "oak_staff",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Дубовый посох",
+  "desc": "+1 к магическому урону",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "I",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "war_axe",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Боевой топор",
+  "desc": "+1 к ближнему урону, +1 Сила",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "M",
+    "n": 1
+   },
+   {
+    "t": "stat",
+    "attr": "STR",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "ash_longbow",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Ясеневый лук",
+  "desc": "+1 к дальнему урону, +1 Ловкость",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "L",
+    "n": 1
+   },
+   {
+    "t": "stat",
+    "attr": "DEX",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "runed_staff",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Рунный посох",
+  "desc": "+1 к магии, +1 Разум",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "I",
+    "n": 1
+   },
+   {
+    "t": "stat",
+    "attr": "INT",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "venom_dagger",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Отравленный кинжал",
+  "desc": "Яд из граней сильнее на 1",
+  "effects": [
+   {
+    "t": "poison",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "lamplighter_hook",
+  "kind": "equipment",
+  "slot": "weapon",
+  "rarity": "epic",
+  "tier": 2,
+  "name": "Крюк Фонарщика",
+  "desc": "+2 к ближнему урону, +5 света на старте",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "M",
+    "n": 2
+   },
+   {
+    "t": "light",
+    "n": 5
+   }
+  ]
+ },
+ {
+  "id": "leather_jerkin",
+  "kind": "equipment",
+  "slot": "armor",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Кожаная куртка",
+  "desc": "+2 здоровья",
+  "effects": [
+   {
+    "t": "hp",
+    "n": 2
+   }
+  ]
+ },
+ {
+  "id": "chain_shirt",
+  "kind": "equipment",
+  "slot": "armor",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Кольчуга",
+  "desc": "+3 здоровья, 1 блок каждый раунд",
+  "effects": [
+   {
+    "t": "hp",
+    "n": 3
+   },
+   {
+    "t": "block",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "healer_robe",
+  "kind": "equipment",
+  "slot": "armor",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Ряса знахаря",
+  "desc": "+2 здоровья, лечение 3 после стычки",
+  "effects": [
+   {
+    "t": "hp",
+    "n": 2
+   },
+   {
+    "t": "heal_after",
+    "n": 3
+   }
+  ]
+ },
+ {
+  "id": "warden_plate",
+  "kind": "equipment",
+  "slot": "armor",
+  "rarity": "epic",
+  "tier": 2,
+  "name": "Латы стража",
+  "desc": "+5 здоровья, 2 блока каждый раунд",
+  "effects": [
+   {
+    "t": "hp",
+    "n": 5
+   },
+   {
+    "t": "block",
+    "n": 2
+   }
+  ]
+ },
+ {
+  "id": "brass_lantern",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Латунный фонарь",
+  "desc": "+6 света на старте похода",
+  "effects": [
+   {
+    "t": "light",
+    "n": 6
+   }
+  ]
+ },
+ {
+  "id": "wolf_fang",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Волчий клык",
+  "desc": "+1 Сила",
+  "effects": [
+   {
+    "t": "stat",
+    "attr": "STR",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "crow_feather",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Перо ворона",
+  "desc": "+1 Ловкость",
+  "effects": [
+   {
+    "t": "stat",
+    "attr": "DEX",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "owl_eye",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Совиный глаз",
+  "desc": "+1 Разум",
+  "effects": [
+   {
+    "t": "stat",
+    "attr": "INT",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "saint_medallion",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "common",
+  "tier": 1,
+  "name": "Медальон святой",
+  "desc": "+1 Дух",
+  "effects": [
+   {
+    "t": "stat",
+    "attr": "SPI",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "bone_charm",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Костяной оберег",
+  "desc": "Лечение 2 после каждой стычки",
+  "effects": [
+   {
+    "t": "heal_after",
+    "n": 2
+   }
+  ]
+ },
+ {
+  "id": "lucky_die",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "rare",
+  "tier": 1,
+  "name": "Счастливая кость",
+  "desc": "+1 бесплатный переброс в раунд",
+  "effects": [
+   {
+    "t": "reroll",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "abyss_shard",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "epic",
+  "tier": 2,
+  "name": "Осколок Бездны",
+  "desc": "+1 к любому урону",
+  "effects": [
+   {
+    "t": "dmg",
+    "face": "M",
+    "n": 1
+   },
+   {
+    "t": "dmg",
+    "face": "L",
+    "n": 1
+   },
+   {
+    "t": "dmg",
+    "face": "I",
+    "n": 1
+   }
+  ]
+ },
+ {
+  "id": "fate_coin",
+  "kind": "equipment",
+  "slot": "relic",
+  "rarity": "epic",
+  "tier": 2,
+  "name": "Монета судьбы",
+  "desc": "+1 переброс, +1 Дух",
+  "effects": [
+   {
+    "t": "reroll",
+    "n": 1
+   },
+   {
+    "t": "stat",
+    "attr": "SPI",
+    "n": 1
+   }
+  ]
+ }
 ]

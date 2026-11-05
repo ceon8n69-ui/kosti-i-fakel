@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "./app.js";
 import { signInitData } from "./auth/initData.js";
 import { createDb, runMigrations } from "./db/client.js";
+import { goldLedger, items, sessions } from "./db/schema.js";
 import { loadEnv } from "./env.js";
 
 const url = process.env.TEST_DATABASE_URL;
@@ -49,7 +50,7 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     await app.ready();
   });
   beforeEach(async () => {
-    await db.execute(sql`truncate gold_ledger, heroes, session_commands, session_snapshots, session_events, sessions, analytics_events, users restart identity cascade`);
+    await db.execute(sql`truncate table_members, tables, market_listings, items, gold_ledger, heroes, session_commands, session_snapshots, session_events, sessions, analytics_events, users restart identity cascade`);
     app.game.dropCache();
   });
   afterAll(async () => {
@@ -207,5 +208,121 @@ describe.skipIf(!url)("партии: журнал, команды, синхро�
     const closed = new Promise<number>((r) => ws.on("close", (code: number) => r(code)));
     ws.send(JSON.stringify({ t: "sub", sessionId: randomUUID() }));
     expect(await closed).toBe(4001);
+  });
+
+  const userIdOf = async (tok: string) => (await app.inject({ method: "GET", url: "/me", headers: auth(tok) })).json().id as string;
+  const clearTutorial = async (uid: string) =>
+    db.insert(sessions).values({ ownerId: uid, scenarioId: "tavern_cellar", seed: "0".repeat(16), seedHash: "x", seq: 1, state: "ended", endedReason: "victory", participantIds: [uid] });
+  const giveGold = async (uid: string, n: number) => {
+    const transactionId = randomUUID();
+    await db.insert(goldLedger).values([
+      { transactionId, accountType: "system", accountId: "test", delta: -n, reason: "test" },
+      { transactionId, accountType: "user", accountId: uid, delta: n, reason: "test" },
+    ]);
+  };
+
+  it("экспедиция: закрыта до обучения, затем случайная карта своего биома", async () => {
+    const tok = await login(1);
+    const heroId = await newHero(tok, "rogue");
+    const locked = await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, biome: "forest" } });
+    expect(locked.statusCode).toBe(403);
+    await clearTutorial(await userIdOf(tok));
+    const ok = await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, biome: "swamp" } });
+    expect(ok.statusCode).toBe(200);
+    const v = (await getState(tok, ok.json().sessionId)).json();
+    expect(v.state.title).toBe("Гнилые топи");
+    expect(v.state).not.toHaveProperty("def");
+    const full = await app.game.fullState(ok.json().sessionId);
+    expect(full!.def.generated).toBe(true);
+    expect(full!.def.biome).toBe("swamp");
+  });
+
+  it("снаряжение надевается и действует в походе; надетое не продать", async () => {
+    const tok = await login(1);
+    const uid = await userIdOf(tok);
+    const heroId = await newHero(tok, "guardian");
+    const [it] = await db.insert(items).values({ ownerId: uid, itemKey: "warden_plate", rarity: "epic", source: "test" }).returning();
+    expect((await app.inject({ method: "POST", url: `/heroes/${heroId}/equip`, headers: auth(tok), payload: { itemId: it!.id } })).statusCode).toBe(200);
+    await clearTutorial(uid);
+    expect((await app.inject({ method: "POST", url: "/market", headers: auth(tok), payload: { itemId: it!.id, price: 100 } })).json()).toMatchObject({ error: "equipped" });
+    const s = await app.inject({ method: "POST", url: "/sessions", headers: auth(tok), payload: { heroId, dungeonId: "tavern_cellar" } });
+    const v = (await getState(tok, s.json().sessionId)).json();
+    expect(v.state.heroes[0].maxHp).toBe(21);
+    expect(v.state.heroes[0].equipment).toEqual(["warden_plate"]);
+    // Герой в походе — снаряжение не снять.
+    expect((await app.inject({ method: "POST", url: "/items/unequip", headers: auth(tok), payload: { itemId: it!.id } })).json()).toMatchObject({ error: "hero_busy" });
+  });
+
+  it("рынок: продажа за золото с комиссией, журнал сходится, защита от перекачки", async () => {
+    const a = await login(1);
+    const b = await login(2);
+    const ua = await userIdOf(a);
+    const ub = await userIdOf(b);
+    const [it] = await db.insert(items).values({ ownerId: ua, itemKey: "lucky_die", rarity: "rare", source: "test" }).returning();
+    expect((await app.inject({ method: "POST", url: "/market", headers: auth(a), payload: { itemId: it!.id, price: 100 } })).json()).toMatchObject({ error: "tutorial_required" });
+    await clearTutorial(ua);
+    expect((await app.inject({ method: "POST", url: "/market", headers: auth(a), payload: { itemId: it!.id, price: 99999 } })).json()).toMatchObject({ error: "bad_price" });
+    const l = await app.inject({ method: "POST", url: "/market", headers: auth(a), payload: { itemId: it!.id, price: 100 } });
+    expect(l.statusCode).toBe(200);
+    const lid = l.json().id;
+    expect((await app.inject({ method: "POST", url: `/market/${lid}/buy`, headers: auth(a) })).json()).toMatchObject({ error: "own_listing" });
+    expect((await app.inject({ method: "POST", url: `/market/${lid}/buy`, headers: auth(b) })).json()).toMatchObject({ error: "not_enough_gold" });
+    await giveGold(ub, 150);
+    expect((await app.inject({ method: "POST", url: `/market/${lid}/buy`, headers: auth(b) })).statusCode).toBe(200);
+    expect((await app.inject({ method: "POST", url: `/market/${lid}/buy`, headers: auth(b) })).json()).toMatchObject({ error: "no_listing" });
+    const invB = (await app.inject({ method: "GET", url: "/inventory", headers: auth(b) })).json();
+    expect(invB.gold).toBe(50);
+    expect(invB.items.map((x: { key: string }) => x.key)).toEqual(["lucky_die"]);
+    expect((await app.inject({ method: "GET", url: "/inventory", headers: auth(a) })).json().gold).toBe(95);
+    const sum = await db.execute(sql`select coalesce(sum(delta),0)::int as n from gold_ledger`);
+    expect(sum[0]!.n).toBe(0);
+    const tx = await db.execute(sql`select transaction_id, sum(delta)::int as n from gold_ledger group by transaction_id having sum(delta) <> 0`);
+    expect(tx.length).toBe(0);
+  });
+
+  it("рынок: параллельные покупки одного лота — продаётся один раз", async () => {
+    const a = await login(1);
+    const ua = await userIdOf(a);
+    await clearTutorial(ua);
+    const [it] = await db.insert(items).values({ ownerId: ua, itemKey: "owl_eye", rarity: "common", source: "test" }).returning();
+    const lid = (await app.inject({ method: "POST", url: "/market", headers: auth(a), payload: { itemId: it!.id, price: 50 } })).json().id;
+    const buyers = await Promise.all([2, 3, 4, 5].map((i) => login(i)));
+    for (const t of buyers) await giveGold(await userIdOf(t), 100);
+    const res = await Promise.all(buyers.map((t) => app.inject({ method: "POST", url: `/market/${lid}/buy`, headers: auth(t) })));
+    expect(res.filter((r) => r.statusCode === 200)).toHaveLength(1);
+    const sold = await db.execute(sql`select count(*)::int as n from gold_ledger where reason = 'market_buy'`);
+    expect(sold[0]!.n).toBe(1);
+  });
+
+  it("партия: стол, приглашение, общий поход, таймер хода", async () => {
+    const a = await login(1);
+    const b = await login(2);
+    const ha = await newHero(a, "guardian");
+    const hb = await newHero(b, "healer");
+    const t = await app.inject({ method: "POST", url: "/tables", headers: auth(a), payload: { biome: "forest", mode: "live", heroId: ha } });
+    const tableId = t.json().tableId;
+    expect((await app.inject({ method: "POST", url: `/tables/${tableId}/join`, headers: auth(b), payload: { heroId: hb } })).statusCode).toBe(200);
+    expect((await app.inject({ method: "POST", url: `/tables/${tableId}/start`, headers: auth(b) })).json()).toMatchObject({ error: "not_host" });
+    expect((await app.inject({ method: "POST", url: `/tables/${tableId}/start`, headers: auth(a) })).json()).toMatchObject({ error: "not_ready" });
+    await app.inject({ method: "POST", url: `/tables/${tableId}/ready`, headers: auth(b), payload: { ready: true } });
+    const st = await app.inject({ method: "POST", url: `/tables/${tableId}/start`, headers: auth(a) });
+    expect(st.statusCode).toBe(200);
+    const sid = st.json().sessionId;
+    // Оба видят один поход.
+    expect((await app.inject({ method: "GET", url: "/sessions/active", headers: auth(b) })).json().sessionId).toBe(sid);
+    const v = (await getState(b, sid)).json();
+    expect(v.state.heroes.map((h: { classId: string }) => h.classId)).toEqual(["guardian", "healer"]);
+    expect((await app.inject({ method: "GET", url: `/tables/${tableId}`, headers: auth(b) })).json()).toMatchObject({ status: "started", sessionId: sid });
+    // Ведущий — первый; второй не может двигать отряд.
+    const full = await app.game.fullState(sid);
+    const step = botStep(full!, "h1")!;
+    expect(step.type).toBe("MOVE");
+    expect((await send(b, sid, { ...step, heroId: "h2" } as CommandBody, full!.seq)).json()).toMatchObject({ error: "not_leader" });
+    // Таймер: просроченный ход Ведущего передаёт ведение.
+    await db.execute(sql`update sessions set turn_deadline = now() - interval '1 second' where id = ${sid}`);
+    expect((await app.game.dueTimers()).map((x) => x.id)).toContain(sid);
+    const r = await app.game.timeout(sid);
+    expect(r, JSON.stringify(r)).toMatchObject({ ok: true });
+    expect((await app.game.fullState(sid))!.leaderId).toBe("h2");
   });
 });

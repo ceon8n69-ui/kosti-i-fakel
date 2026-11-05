@@ -72,6 +72,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@kf/content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@kf/engine':
         specifier: workspace:*
         version: link:../../packages/engine

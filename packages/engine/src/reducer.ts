@@ -161,8 +161,8 @@ export function reduceInPlace(s: SessionState, ev: GameEvent): SessionState {
       hero(s, ev.heroId).taunt = true;
       break;
     case "HEALED": {
-      const h = hero(s, ev.targetId);
-      h.hp = Math.min(h.maxHp, h.hp + ev.amount);
+      const u = unit(s, ev.targetId);
+      u.hp = Math.min(u.maxHp, u.hp + ev.amount);
       break;
     }
     case "DAMAGE_DEALT": {

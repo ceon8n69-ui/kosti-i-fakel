@@ -55,7 +55,7 @@ function intentsFor(ctx: Ctx, m: Monster): Intent[] {
   const out: (Intent | null)[] = [];
   switch (def.behavior) {
     case "multi_hit": {
-      const pool = [...heroesInReach(s, true)];
+      const pool = [...heroesInReach(s, !p.ranged)];
       const targets: string[] = [];
       for (let i = 0; i < (p.targets ?? 1) && pool.length; i++) {
         const idx = pool.length === 1 ? 0 : ctx.rng.int(pool.length);
@@ -87,8 +87,24 @@ function intentsFor(ctx: Ctx, m: Monster): Intent[] {
       break;
     case "boss_summon":
       out.push(attack(true, p.damage ?? 1));
-      if (m.age % (p.every ?? 2) === 0) out.push({ kind: "summon", targets: [], amount: 1, spawn: "rat_swarm" });
+      if (m.age % (p.every ?? 2) === 0) out.push({ kind: "summon", targets: [], amount: 1, spawn: def.spawn ?? "rat_swarm" });
       break;
+    case "pack": {
+      // Стая: каждый живой сородич добавляет урона.
+      const allies = aliveMonsters(s).filter((a) => a.id !== m.id && a.kind === m.kind).length;
+      out.push(attack(true, (p.damage ?? 1) + allies * (p.perAlly ?? 1)));
+      break;
+    }
+    case "poison_bite":
+      out.push(attack(true, p.damage ?? 1, { poison: p.poison ?? 1 }));
+      break;
+    case "heal_ally": {
+      const hurt = aliveMonsters(s)
+        .filter((a) => a.id !== m.id && a.hp < a.maxHp)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.id.localeCompare(b.id))[0];
+      out.push(hurt ? { kind: "heal", targets: [hurt.id], amount: p.heal ?? 2 } : attack(false, p.damage ?? 1));
+      break;
+    }
     case "boss_drain_light":
       out.push(attack(false, p.damage ?? 1));
       out.push({ kind: "drain", targets: [], amount: p.light ?? 0 });
@@ -205,7 +221,9 @@ export function resolveRound(ctx: Ctx): void {
             let target = taunter ?? s.heroes.find((h) => h.id === tid && h.status === "up");
             target ??= pick(ctx, upHeroes(s));
             if (!target) break;
-            damageHero(ctx, target.id, it.amount + bonus, m.id, "monster", !!it.pierce);
+            const fell = damageHero(ctx, target.id, it.amount + bonus, m.id, "monster", !!it.pierce);
+            if (it.poison && !fell && getHero(s, target.id).status === "up")
+              ctx.emit({ type: "POISON_CHANGED", targetId: target.id, poison: getHero(s, target.id).poison + it.poison });
             if (checkWipe(ctx)) return;
           }
           break;
@@ -223,6 +241,11 @@ export function resolveRound(ctx: Ctx): void {
         case "drain":
           changeLight(ctx, -it.amount, m.kind);
           break;
+        case "heal": {
+          const ally = s.monsters.find((x) => x.id === it.targets[0] && x.alive);
+          if (ally) ctx.emit({ type: "HEALED", targetId: ally.id, amount: Math.min(it.amount, ally.maxHp - ally.hp), sourceId: m.id });
+          break;
+        }
         case "charge":
           break;
       }

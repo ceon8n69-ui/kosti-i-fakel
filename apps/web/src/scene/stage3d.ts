@@ -77,6 +77,14 @@ export class Stage3D {
   private dice: DieObj[] = [];
   private d20: DieObj | null = null;
   private trayRoot = new THREE.Group();
+  /**
+   * Кубики живут в своей сцене и рисуются поверх основной. В бою — той же камерой (лоток перед героями),
+   * на карте — своей камерой и над затемнением, чтобы лоток не накладывался на клетки.
+   */
+  private diceScene = new THREE.Scene();
+  private diceCam = new THREE.OrthographicCamera(-3, 3, 3, -3, 0.1, 100);
+  private dim: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  private dimLevel = 0;
   private raf = 0;
   private last = performance.now();
   private disposed = false;
@@ -126,6 +134,23 @@ export class Stage3D {
     sc.bottom = -6;
     sun.target.position.copy(at(0, -1));
     this.scene.add(sun, sun.target);
+    this.diceScene.add(new THREE.HemisphereLight("#ffe2b8", "#2a1a10", 1.1));
+    const diceSun = new THREE.DirectionalLight("#fff1dc", 1.5);
+    diceSun.position.copy(at(0, TRAY_DEPTH)).add(new THREE.Vector3(-3, 9, 4));
+    diceSun.target.position.copy(at(0, TRAY_DEPTH));
+    diceSun.castShadow = true;
+    diceSun.shadow.mapSize.set(1024, 1024);
+    Object.assign(diceSun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 });
+    this.diceScene.add(diceSun, diceSun.target);
+    this.dim = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 200),
+      new THREE.MeshBasicMaterial({ color: "#000", transparent: true, opacity: 0, depthWrite: false, depthTest: false }),
+    );
+    this.dim.rotation.x = -Math.PI / 2;
+    this.dim.position.copy(at(0, TRAY_DEPTH)).setY(-0.5);
+    this.dim.renderOrder = -1;
+    this.diceScene.add(this.dim);
+    this.renderer.autoClear = false;
     this.torch = new THREE.PointLight("#ff9a3c", 18, 9, 1.6);
     this.torch.position.copy(at(0, 0.2, 2.6));
     this.scene.add(this.torch);
@@ -249,7 +274,7 @@ export class Stage3D {
     this.trayRoot.position.copy(at(0, TRAY_DEPTH));
     this.trayRoot.rotation.y = Math.PI / 4;
     this.trayRoot.scale.setScalar(TRAY_SCALE);
-    this.scene.add(this.trayRoot);
+    this.diceScene.add(this.trayRoot);
   }
 
   private resize = (): void => {
@@ -276,6 +301,15 @@ export class Stage3D {
     this.camera.position.copy(this.camTarget).addScaledVector(dir, 30);
     this.camera.lookAt(this.camTarget);
     this.camera.updateProjectionMatrix();
+    // Камера кубиков на карте: лоток в нижней половине экрана, крупно.
+    const dW = Math.max(2.7, 2.7);
+    const dH = dW / aspect;
+    Object.assign(this.diceCam, { left: -dW, right: dW, top: dH, bottom: -dH, zoom: 1 });
+    const trayC = at(0, TRAY_DEPTH);
+    const diceTarget = trayC.clone().addScaledVector(V, dH * 0.9);
+    this.diceCam.position.copy(diceTarget).addScaledVector(dir, 30);
+    this.diceCam.lookAt(diceTarget);
+    this.diceCam.updateProjectionMatrix();
   };
 
   // ───────── Цикл ─────────
@@ -304,7 +338,16 @@ export class Stage3D {
       this.camera.position.z += (Math.random() - 0.5) * this.shakeAmp;
       this.shakeAmp *= 0.86;
     }
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
+    const rolling = this.dice.some((d) => d.mesh.visible) || !!this.d20?.mesh.visible;
+    const wantDim = this.mode === "map" && rolling ? 0.55 : 0;
+    this.dimLevel += (wantDim - this.dimLevel) * Math.min(1, dt / 120);
+    this.dim.material.opacity = this.dimLevel;
+    if (this.mode === "battle" || rolling || this.dimLevel > 0.01) {
+      this.renderer.clearDepth();
+      this.renderer.render(this.diceScene, this.mode === "battle" ? this.camera : this.diceCam);
+    }
     this.hooks.onFrame?.();
     this.watchFps(dt);
   };
@@ -332,11 +375,14 @@ export class Stage3D {
   }
 
   /** Лоток с кубиками стоит у нижнего края экрана, в бою — перед героями. */
+  /** Лоток всегда стоит на своём месте в сцене кубиков; на карте он виден только во время броска. */
   private placeTray(): void {
-    if (this.mode === "battle") this.trayRoot.position.copy(at(0, TRAY_DEPTH));
-    else this.trayRoot.position.copy(this.camTarget).addScaledVector(V, -2.9).setY(0.02);
-    // На карте лоток появляется только на время броска, чтобы не закрывать клетки.
     this.trayRoot.visible = this.mode === "battle" || this.dice.some((d) => d.mesh.visible) || !!this.d20?.mesh.visible;
+  }
+
+  /** Камера, через которую сейчас видны кубики. */
+  private get rollCam(): THREE.OrthographicCamera {
+    return this.mode === "battle" ? this.camera : this.diceCam;
   }
 
   setMode(mode: "map" | "battle"): void {
@@ -664,7 +710,7 @@ export class Stage3D {
     m.root.visible = false;
   }
 
-  private burst(at3: THREE.Vector3, color: string, n: number): void {
+  private burst(at3: THREE.Vector3, color: string, n: number, target: THREE.Scene = this.scene): void {
     const pos = new Float32Array(n * 3);
     const vel = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
@@ -674,7 +720,7 @@ export class Stage3D {
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     const pts = new THREE.Points(g, new THREE.PointsMaterial({ color, size: 0.07, transparent: true }));
-    this.scene.add(pts);
+    target.add(pts);
     this.particles.push({ pts, vel, life: 1 });
   }
 
@@ -690,7 +736,7 @@ export class Stage3D {
       a.needsUpdate = true;
       (p.pts.material as THREE.PointsMaterial).opacity = Math.max(0, p.life);
       if (p.life <= 0) {
-        this.scene.remove(p.pts);
+        p.pts.parent?.remove(p.pts);
         p.pts.geometry.dispose();
         this.particles.splice(this.particles.indexOf(p), 1);
       }
@@ -853,7 +899,7 @@ export class Stage3D {
       if (crit && !slowed && k > 0.45) {
         slowed = true;
         this.critSlow = 0.35;
-        void this.zoomTo(1.55, this.trayRoot.position.clone().addScaledVector(V, 0.3), 500);
+        void this.zoomTo(1.55, this.mode === "battle" ? this.trayRoot.position.clone().addScaledVector(V, 0.3) : null, 500);
       }
     }, ease.linear);
     this.critSlow = 1;
@@ -913,32 +959,43 @@ export class Stage3D {
     }
   }
 
-  private async zoomTo(z: number, focus: THREE.Vector3, ms: number): Promise<void> {
-    const z0 = this.camera.zoom;
+  private async zoomTo(z: number, focus: THREE.Vector3 | null, ms: number): Promise<void> {
+    const cam = this.rollCam;
+    if (cam === this.diceCam) {
+      // На карте приближается только слой кубиков.
+      const z0 = cam.zoom;
+      await this.tw.run(ms, (k) => {
+        cam.zoom = z0 + (z - z0) * k;
+        cam.updateProjectionMatrix();
+      }, ease.inOutCubic);
+      return;
+    }
+    const z0 = cam.zoom;
     const t0 = this.camTarget.clone();
-    const dir = this.camera.position.clone().sub(this.camTarget).normalize();
+    const target = focus ?? t0;
+    const dir = cam.position.clone().sub(this.camTarget).normalize();
     await this.tw.run(ms, (k) => {
-      this.camera.zoom = z0 + (z - z0) * k;
-      const t = t0.clone().lerp(focus, k);
-      this.camera.position.copy(t).addScaledVector(dir, 30);
-      this.camera.lookAt(t);
-      this.camera.updateProjectionMatrix();
+      cam.zoom = z0 + (z - z0) * k;
+      const t = t0.clone().lerp(target, k);
+      cam.position.copy(t).addScaledVector(dir, 30);
+      cam.lookAt(t);
+      cam.updateProjectionMatrix();
     }, ease.inOutCubic);
-    this.camTarget.copy(focus);
+    this.camTarget.copy(target);
   }
 
   /** Короткий эффект стола после натуральной 1 или 20. */
   async tableFx(kind: "crit" | "fumble"): Promise<void> {
     this.shakeAmp = kind === "crit" ? 0.18 : 0.25;
     const color = kind === "crit" ? "#ffd45c" : "#c0392b";
-    if (this.d20) this.burst(this.trayRoot.localToWorld(this.d20.mesh.position.clone()), color, 40);
+    if (this.d20) this.burst(this.trayRoot.localToWorld(this.d20.mesh.position.clone()), color, 40, this.diceScene);
     const glow = new THREE.PointLight(color, 0, 6);
     glow.position.copy(this.trayRoot.position).setY(1.2);
-    this.scene.add(glow);
+    this.diceScene.add(glow);
     await this.tw.run(700, (k) => (glow.intensity = Math.sin(k * Math.PI) * 40));
-    this.scene.remove(glow);
+    this.diceScene.remove(glow);
     await this.tw.wait(250);
-    await this.zoomTo(this.baseZoom, this.mode === "battle" ? at(0, 0.45, 0) : this.follow.clone(), 450);
+    await this.zoomTo(this.baseZoom, this.mode === "battle" ? at(0, 0.45, 0) : null, 450);
   }
 
   dispose(): void {

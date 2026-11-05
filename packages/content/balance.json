@@ -634,7 +634,8 @@
    "params": {
     "damage": 4,
     "every": 2
-   }
+   },
+   "spawn": "rat_swarm"
   },
   {
    "id": "lamplighter",
@@ -648,6 +649,174 @@
     "damage": 3,
     "light": 3
    }
+  },
+  {
+   "id": "wolf",
+   "cost": 3,
+   "hp": 7,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "pack",
+   "params": {
+    "damage": 2,
+    "perAlly": 1
+   }
+  },
+  {
+   "id": "alpha_wolf",
+   "cost": 14,
+   "hp": 40,
+   "armor": 1,
+   "row": "front",
+   "boss": true,
+   "behavior": "boss_summon",
+   "params": {
+    "damage": 4,
+    "every": 2
+   },
+   "spawn": "wolf"
+  },
+  {
+   "id": "forest_spider",
+   "cost": 4,
+   "hp": 6,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "poison_bite",
+   "params": {
+    "damage": 1,
+    "poison": 2
+   }
+  },
+  {
+   "id": "bandit_archer",
+   "cost": 4,
+   "hp": 7,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "ranged",
+   "params": {
+    "damage": 2
+   }
+  },
+  {
+   "id": "bandit_brute",
+   "cost": 5,
+   "hp": 11,
+   "armor": 1,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee",
+   "params": {
+    "damage": 3
+   }
+  },
+  {
+   "id": "carrion_crow",
+   "cost": 2,
+   "hp": 4,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "multi_hit",
+   "params": {
+    "damage": 1,
+    "targets": 2,
+    "ranged": 1
+   }
+  },
+  {
+   "id": "rock_crawler",
+   "cost": 6,
+   "hp": 14,
+   "armor": 3,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee",
+   "params": {
+    "damage": 2
+   }
+  },
+  {
+   "id": "mountain_witch",
+   "cost": 7,
+   "hp": 9,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "heal_ally",
+   "params": {
+    "heal": 3,
+    "damage": 2
+   }
+  },
+  {
+   "id": "leech_swarm",
+   "cost": 3,
+   "hp": 6,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "poison_bite",
+   "params": {
+    "damage": 1,
+    "poison": 1
+   }
+  },
+  {
+   "id": "bog_lurker",
+   "cost": 6,
+   "hp": 15,
+   "armor": 0,
+   "row": "front",
+   "boss": false,
+   "behavior": "melee_pierce",
+   "params": {
+    "damage": 3
+   }
+  },
+  {
+   "id": "will_o_wisp",
+   "cost": 4,
+   "hp": 5,
+   "armor": 0,
+   "row": "back",
+   "boss": false,
+   "behavior": "boss_drain_light",
+   "params": {
+    "damage": 1,
+    "light": 2
+   }
+  },
+  {
+   "id": "stone_sentinel",
+   "cost": 16,
+   "hp": 50,
+   "armor": 2,
+   "row": "front",
+   "boss": true,
+   "behavior": "charge",
+   "params": {
+    "damage": 7,
+    "every": 2
+   }
+  },
+  {
+   "id": "grave_knight",
+   "cost": 16,
+   "hp": 48,
+   "armor": 2,
+   "row": "front",
+   "boss": true,
+   "behavior": "boss_summon",
+   "params": {
+    "damage": 5,
+    "every": 3
+   },
+   "spawn": "skeleton_guard"
   }
  ],
  "traps": [

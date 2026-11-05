@@ -38,6 +38,8 @@ export const MonsterSchema = z.object({
   boss: z.boolean().default(false),
   behavior: z.string(),
   params: z.record(z.string(), z.number()).default({}),
+  /** Кого зовёт босс (boss_summon). */
+  spawn: z.string().optional(),
 });
 
 export const TrapSchema = z.object({

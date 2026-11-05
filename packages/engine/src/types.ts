@@ -37,7 +37,7 @@ export interface Hero {
   dbId?: string;
 }
 
-export type IntentKind = "attack" | "block" | "doom" | "charge" | "summon" | "drain";
+export type IntentKind = "attack" | "block" | "doom" | "charge" | "summon" | "drain" | "heal";
 
 export interface Intent {
   kind: IntentKind;
@@ -45,6 +45,8 @@ export interface Intent {
   targets: string[];
   amount: number;
   pierce?: boolean;
+  /** Укус с ядом: столько яда получит цель. */
+  poison?: number;
   /** summon: какой монстр появится. */
   spawn?: string;
 }

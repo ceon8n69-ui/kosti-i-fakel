@@ -197,7 +197,11 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
       setSending(true);
       try {
         const ack = await client.send(body);
-        if (!ack.ok && ack.error && ack.error !== "stale_seq") ui.toast(tk(`err.${ack.error}`), "bad");
+        if (!ack.ok && ack.error && ack.error !== "stale_seq") {
+          const key = `err.${ack.error}`;
+          const text = tk(key);
+          ui.toast(text === key ? t("err.generic") : text, "bad");
+        }
       } finally {
         setSending(false);
       }
@@ -228,7 +232,13 @@ export default function GameScreen({ sessionId, userId, onExit }: Props) {
       if (o) setSheet(o);
       return;
     }
-    if (hit.cell && !locked) {
+    if (hit.cell) {
+      const [cx, cy] = hit.cell;
+      // На клетке есть объект — открываем его действия, а не идём.
+      const here = truth.objects.find((o) => o.x === cx && o.y === cy && o.type !== "light");
+      if (here) return setSheet(here);
+      if (cx === truth.pos.x && cy === truth.pos.y) return;
+      if (locked) return;
       if (!isLeader) return ui.toast(t("err.not_leader"), "bad");
       st.map.showMarker(hit.cell[0], hit.cell[1]);
       void send({ type: "MOVE", heroId: myTruth.id, x: hit.cell[0], y: hit.cell[1] });

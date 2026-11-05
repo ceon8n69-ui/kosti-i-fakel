@@ -390,12 +390,19 @@ export class MapView {
   /** Что под пальцем: объект или клетка пола. */
   pick(ray: THREE.Raycaster): { objectId?: string; cell?: [number, number] } {
     const hits = ray.intersectObjects(this.group.children, true);
-    for (const h of hits) {
+    const owner = (h: THREE.Intersection) => {
       let o: THREE.Object3D | null = h.object;
       while (o && !o.userData.objectId && !o.userData.cell) o = o.parent;
-      if (!o) continue;
-      if (o.userData.objectId) return { objectId: o.userData.objectId as string };
-      if (o.userData.cell && o.userData.ch !== "#") return { cell: o.userData.cell as [number, number] };
+      return o;
+    };
+    // Сначала объекты (даже если перед ними фигурка или пол), потом клетки.
+    for (const h of hits) {
+      const o = owner(h);
+      if (o?.userData.objectId) return { objectId: o.userData.objectId as string };
+    }
+    for (const h of hits) {
+      const o = owner(h);
+      if (o?.userData.cell && o.userData.ch !== "#") return { cell: o.userData.cell as [number, number] };
     }
     return {};
   }

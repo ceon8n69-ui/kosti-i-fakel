@@ -442,19 +442,18 @@ export class Stage3D {
     const entry = (manifest.miniatures as Record<string, { sprite: string | null; placeholder: { color: string; glyph: string } }>)[kind];
     const placeholder = this.placeholderTexture(kind, height);
     if (entry?.sprite && mat) {
-      new THREE.TextureLoader().load(
-        `${import.meta.env.BASE_URL}${entry.sprite}`,
-        (t) => {
-          t.colorSpace = THREE.SRGBColorSpace;
-          t.anisotropy = 4;
-          mat.map = t;
-          mat.needsUpdate = true;
-        },
-        undefined,
-        () => {
-          /* файла нет — остаётся заглушка */
-        },
-      );
+      const url = `${import.meta.env.BASE_URL}${entry.sprite}`;
+      const apply = (t: THREE.Texture) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 4;
+        mat.map = t;
+        mat.needsUpdate = true;
+      };
+      const loader = new THREE.TextureLoader();
+      // Нет WebP — пробуем старый PNG той же фигурки, затем остаётся заглушка.
+      loader.load(url, apply, undefined, () => {
+        if (url.endsWith(".webp")) loader.load(url.replace(/\.webp$/, ".png"), apply, undefined, () => {});
+      });
     }
     return placeholder;
   }

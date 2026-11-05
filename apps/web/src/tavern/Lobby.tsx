@@ -97,7 +97,7 @@ export function Lobby({ tableId, userId, heroId, onPlay, onClose }: { tableId: s
             );
           return (
             <li key={m.userId} className={`seat ${m.ready ? "ready" : ""}`}>
-              {m.hero ? <img src={`/art/minis/${m.hero.classId}.webp`} alt="" onError={(e) => ((e.target as HTMLImageElement).style.visibility = "hidden")} /> : <span className="seat-ic">?</span>}
+              {m.hero ? <img src={`/art/minis/${m.hero.classId}.webp`} alt="" onError={(e) => { const i = e.target as HTMLImageElement; if (i.src.endsWith(".webp")) i.src = i.src.replace(/\.webp$/, ".png"); else i.style.visibility = "hidden"; }} /> : <span className="seat-ic">?</span>}
               <div className="grow">
                 <b>
                   {m.name}

@@ -99,7 +99,7 @@ function HeroPicker({ heroes, heroId, setHeroId }: { heroes: HeroCard[]; heroId:
     <>
       {heroes.map((h) => (
         <button key={h.id} className={`hero-card ${heroId === h.id ? "sel" : ""}`} disabled={h.status === "dead"} onClick={() => setHeroId(h.id)}>
-          <img src={`/art/minis/${h.classId}.webp`} alt="" onError={(e) => ((e.target as HTMLImageElement).style.visibility = "hidden")} />
+          <img src={`/art/minis/${h.classId}.webp`} alt="" onError={(e) => { const i = e.target as HTMLImageElement; if (i.src.endsWith(".webp")) i.src = i.src.replace(/\.webp$/, ".png"); else i.style.visibility = "hidden"; }} />
           <div className="grow">
             <b>{h.name}</b>
             <span>
@@ -228,7 +228,7 @@ function PlayTab({
             <div className="classes">
               {CLASSES.map((c) => (
                 <button key={c} className={`class-card ${pick === c ? "sel" : ""}`} onClick={() => setPick(c)}>
-                  <img src={`/art/minis/${c}.webp`} alt="" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} />
+                  <img src={`/art/minis/${c}.webp`} alt="" onError={(e) => { const i = e.target as HTMLImageElement; if (i.src.endsWith(".webp")) i.src = i.src.replace(/\.webp$/, ".png"); else i.style.display = "none"; }} />
                   <b>{tk(`class.${c}`)}</b>
                   <span>{tk(`class.${c}.d`)}</span>
                 </button>

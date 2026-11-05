@@ -128,10 +128,11 @@ ITEMS = {
 
 
 entries = (
-    [{"key": k, "kind": "mini", "path": f"apps/web/public/art/minis/{k}.png", "prompt": f"{STYLE} Subject: {d}."} for k, d in MINIS.items()]
-    + [{"key": k, "kind": "prop", "path": f"apps/web/public/art/props/{k}.png", "prompt": f"{PROP_STYLE} Subject: {d}."} for k, d in PROPS.items()]
-    + [{"key": f"ground_{k}", "kind": "ground", "path": f"apps/web/public/art/ground/{k}.jpg", "prompt": f"{GROUND_STYLE} Surface: {d}."} for k, d in GROUNDS.items()]
-    + [{"key": f"item_{k}", "kind": "item", "path": f"apps/web/public/art/items/{k}.png", "prompt": f"{ITEM_STYLE} Subject: {d}."} for k, d in ITEMS.items()]
+    # Миниатюры и препятствия — в высоком качестве (их видно крупно), земля и иконки — в среднем.
+    [{"key": k, "kind": "mini", "quality": "high", "path": f"apps/web/public/art/minis/{k}.webp", "prompt": f"{STYLE} Subject: {d}."} for k, d in MINIS.items()]
+    + [{"key": k, "kind": "prop", "quality": "high", "path": f"apps/web/public/art/props/{k}.webp", "prompt": f"{PROP_STYLE} Subject: {d}."} for k, d in PROPS.items()]
+    + [{"key": f"ground_{k}", "kind": "ground", "quality": "medium", "path": f"apps/web/public/art/ground/{k}.jpg", "prompt": f"{GROUND_STYLE} Surface: {d}."} for k, d in GROUNDS.items()]
+    + [{"key": f"item_{k}", "kind": "item", "quality": "medium", "path": f"apps/web/public/art/items/{k}.webp", "prompt": f"{ITEM_STYLE} Subject: {d}."} for k, d in ITEMS.items()]
 )
 (ROOT / "tools/art-manifest.json").write_text(json.dumps(entries, ensure_ascii=False, indent=1) + "\n")
 print(f"{len(entries)} entries")

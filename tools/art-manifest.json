@@ -2,409 +2,477 @@
  {
   "key": "guardian",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/guardian.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/guardian.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a stocky human warden in dented steel plate armour with a tall tower shield and a short broadsword, deep blue tabard with an orange flame emblem, a small brass lantern hanging from the belt, determined bearded face."
  },
  {
   "key": "rogue",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rogue.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rogue.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a lean hooded scout in dark green leather armour, short recurve bow in hand, quiver of arrows, two daggers on the belt, a cloth half-mask, a small glowing green poison vial at the hip."
  },
  {
   "key": "sorcerer",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/sorcerer.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/sorcerer.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a young sorcerer in violet robes with silver embroidery, one hand raised with glowing purple runes floating around it, the other holding a staff topped with a caged violet flame."
  },
  {
   "key": "healer",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/healer.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/healer.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a herbalist healer woman in burgundy and cream clothes, a satchel of herbs, a wooden staff hung with bundles of dried herbs and a small green-glowing lantern, calm kind face."
  },
  {
   "key": "ghost",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/ghost.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/ghost.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a translucent pale-blue ghost of an old well-keeper in a patched apron, holding a rusty bucket, sad kind face, wisps of mist instead of feet."
  },
  {
   "key": "rat_swarm",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rat_swarm.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rat_swarm.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a heaving pile of five mangy brown sewer rats climbing over each other, beady red eyes, bared teeth."
  },
  {
   "key": "skeleton_guard",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/skeleton_guard.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/skeleton_guard.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a skeleton soldier in rusted half-armour holding a round dented shield and a notched spear, hollow eye sockets with faint pale glow."
  },
  {
   "key": "rotten_archer",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rotten_archer.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rotten_archer.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a rotting undead archer in a tattered grey hood, mossy greenish skin, drawing a crude bow."
  },
  {
   "key": "slime",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/slime.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/slime.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a glossy translucent teal ooze blob with bones and old coins suspended inside it."
  },
  {
   "key": "shade",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/shade.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/shade.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a wispy smoke-like shadow creature with long clawed hands and two glowing pale eyes, deep indigo and black."
  },
  {
   "key": "cultist",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/cultist.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/cultist.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a robed cultist in dark crimson with the face hidden in a deep hood, holding a curved ritual dagger and a smoking brass censer."
  },
  {
   "key": "rust_golem",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rust_golem.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rust_golem.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a hulking golem of rusted iron plates and rivets with a glowing furnace in its chest and huge fists."
  },
  {
   "key": "rat_queen",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rat_queen.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rat_queen.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a giant rat matriarch standing upright, wearing a crown of bent cutlery and a tattered royal purple cape, holding a bone sceptre, bigger and more imposing than a person."
  },
  {
   "key": "lamplighter",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/lamplighter.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/lamplighter.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a tall gaunt figure in a long dark coat and wide-brimmed hat, the face a dark void, carrying a long pole with a hook and a cluster of stolen lanterns burning with cold blue flames."
  },
  {
   "key": "wolf",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/wolf.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/wolf.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a lean grey forest wolf with bristling fur, bared fangs and yellow eyes, prowling low."
  },
  {
   "key": "alpha_wolf",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/alpha_wolf.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/alpha_wolf.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a huge scarred black alpha wolf with a mane of thick fur, glowing amber eyes, an old arrow stuck in its shoulder, much larger than a normal wolf."
  },
  {
   "key": "forest_spider",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/forest_spider.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/forest_spider.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a giant hairy forest spider with mottled green and brown legs and a cluster of shining eyes, fangs dripping venom."
  },
  {
   "key": "bandit_archer",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/bandit_archer.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/bandit_archer.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a hooded forest bandit archer in patched brown leathers and a scarf over the face, drawing a short bow."
  },
  {
   "key": "bandit_brute",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/bandit_brute.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/bandit_brute.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a burly bandit brute in a stained leather vest and iron bracers, holding a heavy wood axe, scarred bald head."
  },
  {
   "key": "carrion_crow",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/carrion_crow.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/carrion_crow.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a monstrous carrion crow the size of a dog with ragged black feathers, a hooked beak and red eyes, wings spread."
  },
  {
   "key": "rock_crawler",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/rock_crawler.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/rock_crawler.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a hulking crawling creature made of grey mountain rock and moss, stone plates for armour, glowing cracks."
  },
  {
   "key": "mountain_witch",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/mountain_witch.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/mountain_witch.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: an old mountain witch in grey furs and bone jewellery, holding a staff with a ram skull, faint green healing light in her hand."
  },
  {
   "key": "leech_swarm",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/leech_swarm.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/leech_swarm.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a writhing knot of giant swamp leeches, glossy dark green and red bodies, round sucker mouths with tiny teeth."
  },
  {
   "key": "bog_lurker",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/bog_lurker.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/bog_lurker.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a tall drowned swamp creature with long arms, skin like rotten bark covered in weed and mud, glowing pale eyes."
  },
  {
   "key": "will_o_wisp",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/will_o_wisp.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/will_o_wisp.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a floating ghostly swamp wisp: a cold blue-green flame with a faint skull face inside, trailing sparks."
  },
  {
   "key": "stone_sentinel",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/stone_sentinel.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/stone_sentinel.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: a towering ancient stone guardian statue come alive, cracked granite body with runes glowing orange, a great stone halberd, much bigger than a person."
  },
  {
   "key": "grave_knight",
   "kind": "mini",
-  "path": "apps/web/public/art/minis/grave_knight.png",
+  "quality": "high",
+  "path": "apps/web/public/art/minis/grave_knight.webp",
   "prompt": "A single hand-painted fantasy tabletop miniature figure, 28mm scale resin miniature with a rich painted finish: bold base colors, crisp edge highlights, dark wash in the recesses, slightly exaggerated heroic proportions. Dark-fantasy setting lit by warm torchlight. Full body, standing, three-quarter view turned slightly to the right, the whole figure visible from head to feet. No base, no plinth, no ground, no shadow, isolated on a fully transparent background. No text, no letters, no logos, no frame. Subject: an undead knight in blackened ornate plate armour with a torn cape, pale fire in the visor slits, holding a great sword, imposing and larger than a person."
  },
  {
   "key": "forest_pine",
   "kind": "prop",
-  "path": "apps/web/public/art/props/forest_pine.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/forest_pine.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a tall dark pine tree."
  },
  {
   "key": "forest_oak",
   "kind": "prop",
-  "path": "apps/web/public/art/props/forest_oak.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/forest_oak.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a gnarled old oak tree with twisted roots."
  },
  {
   "key": "forest_bush",
   "kind": "prop",
-  "path": "apps/web/public/art/props/forest_bush.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/forest_bush.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a dense thorny bush with a few red berries."
  },
  {
   "key": "mountains_boulder",
   "kind": "prop",
-  "path": "apps/web/public/art/props/mountains_boulder.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/mountains_boulder.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a large grey granite boulder with moss and lichen."
  },
  {
   "key": "mountains_spire",
   "kind": "prop",
-  "path": "apps/web/public/art/props/mountains_spire.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/mountains_spire.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a jagged rock spire."
  },
  {
   "key": "swamp_deadtree",
   "kind": "prop",
-  "path": "apps/web/public/art/props/swamp_deadtree.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/swamp_deadtree.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a dead swamp tree with drooping grey moss."
  },
  {
   "key": "swamp_reeds",
   "kind": "prop",
-  "path": "apps/web/public/art/props/swamp_reeds.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/swamp_reeds.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a clump of tall swamp reeds and cattails."
  },
  {
   "key": "ruins_pillar",
   "kind": "prop",
-  "path": "apps/web/public/art/props/ruins_pillar.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/ruins_pillar.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a broken ancient marble pillar overgrown with ivy."
  },
  {
   "key": "ruins_wall",
   "kind": "prop",
-  "path": "apps/web/public/art/props/ruins_wall.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/ruins_wall.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a crumbling fragment of an old stone wall with an arch."
  },
  {
   "key": "caves_stalagmite",
   "kind": "prop",
-  "path": "apps/web/public/art/props/caves_stalagmite.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/caves_stalagmite.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a cluster of wet glistening stalagmites."
  },
  {
   "key": "caves_rocks",
   "kind": "prop",
-  "path": "apps/web/public/art/props/caves_rocks.png",
+  "quality": "high",
+  "path": "apps/web/public/art/props/caves_rocks.webp",
   "prompt": "A single hand-painted fantasy tabletop terrain piece for a miniature wargame, rich painted finish with edge highlights, dark-fantasy mood. Full object visible, three-quarter view. No base, no ground, isolated on a fully transparent background. No text, no letters, no logos. Subject: a pile of dark cave rocks with glowing blue crystals."
  },
  {
   "key": "ground_dungeon",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/dungeon.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: worn grey dungeon flagstones with dark mortar lines."
  },
  {
   "key": "ground_forest",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/forest.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: dark forest floor with grass, moss, fallen pine needles and small stones."
  },
  {
   "key": "ground_mountains",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/mountains.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: rocky mountain ground with grey gravel, cracked stone and patches of snow."
  },
  {
   "key": "ground_swamp",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/swamp.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: muddy swamp ground with dark wet earth, puddles and rotting leaves."
  },
  {
   "key": "ground_ruins",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/ruins.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: broken ancient paving stones with grass growing between cracks."
  },
  {
   "key": "ground_caves",
   "kind": "ground",
+  "quality": "medium",
   "path": "apps/web/public/art/ground/caves.jpg",
   "prompt": "Seamless tileable top-down texture for a fantasy tabletop game board, hand-painted look, even lighting, no shadows from objects, fills the whole square edge to edge, no border, no text. Surface: dark cave floor with wet rock and scattered pebbles."
  },
  {
   "key": "item_potion",
   "kind": "item",
-  "path": "apps/web/public/art/items/potion.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/potion.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a small round glass flask with glowing red healing liquid and a cork."
  },
  {
   "key": "item_torch",
   "kind": "item",
-  "path": "apps/web/public/art/items/torch.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/torch.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a burning wooden torch with an oily rag."
  },
  {
   "key": "item_return_scroll",
   "kind": "item",
-  "path": "apps/web/public/art/items/return_scroll.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/return_scroll.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a rolled parchment scroll with a glowing golden seal."
  },
  {
   "key": "item_rusty_sword",
   "kind": "item",
-  "path": "apps/web/public/art/items/rusty_sword.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/rusty_sword.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a rusty iron short sword with a leather grip."
  },
  {
   "key": "item_hunter_bow",
   "kind": "item",
-  "path": "apps/web/public/art/items/hunter_bow.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/hunter_bow.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a simple wooden hunting bow."
  },
  {
   "key": "item_oak_staff",
   "kind": "item",
-  "path": "apps/web/public/art/items/oak_staff.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/oak_staff.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a plain oak walking staff with a carved top."
  },
  {
   "key": "item_war_axe",
   "kind": "item",
-  "path": "apps/web/public/art/items/war_axe.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/war_axe.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a heavy steel battle axe with a bearded blade."
  },
  {
   "key": "item_ash_longbow",
   "kind": "item",
-  "path": "apps/web/public/art/items/ash_longbow.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/ash_longbow.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: an elegant pale ash longbow with green fletched arrows."
  },
  {
   "key": "item_runed_staff",
   "kind": "item",
-  "path": "apps/web/public/art/items/runed_staff.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/runed_staff.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a dark staff with glowing violet runes along its length."
  },
  {
   "key": "item_venom_dagger",
   "kind": "item",
-  "path": "apps/web/public/art/items/venom_dagger.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/venom_dagger.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a curved dagger dripping green venom."
  },
  {
   "key": "item_lamplighter_hook",
   "kind": "item",
-  "path": "apps/web/public/art/items/lamplighter_hook.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/lamplighter_hook.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a long iron lamplighter hook with a small cold blue lantern hanging from it."
  },
  {
   "key": "item_leather_jerkin",
   "kind": "item",
-  "path": "apps/web/public/art/items/leather_jerkin.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/leather_jerkin.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a brown leather jerkin with buckles."
  },
  {
   "key": "item_chain_shirt",
   "kind": "item",
-  "path": "apps/web/public/art/items/chain_shirt.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/chain_shirt.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a steel chainmail shirt."
  },
  {
   "key": "item_healer_robe",
   "kind": "item",
-  "path": "apps/web/public/art/items/healer_robe.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/healer_robe.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a burgundy healer robe with embroidered herbs."
  },
  {
   "key": "item_warden_plate",
   "kind": "item",
-  "path": "apps/web/public/art/items/warden_plate.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/warden_plate.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a polished steel plate breastplate with an orange flame emblem."
  },
  {
   "key": "item_brass_lantern",
   "kind": "item",
-  "path": "apps/web/public/art/items/brass_lantern.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/brass_lantern.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a small brass lantern with a warm flame."
  },
  {
   "key": "item_wolf_fang",
   "kind": "item",
-  "path": "apps/web/public/art/items/wolf_fang.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/wolf_fang.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a large wolf fang on a leather cord."
  },
  {
   "key": "item_crow_feather",
   "kind": "item",
-  "path": "apps/web/public/art/items/crow_feather.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/crow_feather.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a black crow feather with a silver clasp."
  },
  {
   "key": "item_owl_eye",
   "kind": "item",
-  "path": "apps/web/public/art/items/owl_eye.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/owl_eye.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: an amber gem shaped like an owl eye set in silver."
  },
  {
   "key": "item_saint_medallion",
   "kind": "item",
-  "path": "apps/web/public/art/items/saint_medallion.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/saint_medallion.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a round silver saint medallion on a chain."
  },
  {
   "key": "item_bone_charm",
   "kind": "item",
-  "path": "apps/web/public/art/items/bone_charm.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/bone_charm.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a charm of small carved bones tied with red thread."
  },
  {
   "key": "item_lucky_die",
   "kind": "item",
-  "path": "apps/web/public/art/items/lucky_die.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/lucky_die.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a worn ivory six-sided die with gold pips."
  },
  {
   "key": "item_abyss_shard",
   "kind": "item",
-  "path": "apps/web/public/art/items/abyss_shard.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/abyss_shard.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: a jagged shard of black crystal glowing with violet light."
  },
  {
   "key": "item_fate_coin",
   "kind": "item",
-  "path": "apps/web/public/art/items/fate_coin.png",
+  "quality": "medium",
+  "path": "apps/web/public/art/items/fate_coin.webp",
   "prompt": "A single fantasy RPG inventory icon, hand-painted, rich colours, crisp edges, centred, dramatic lighting, isolated on a fully transparent background. No text, no letters, no frame. Subject: an ancient gold coin with a lantern on one side."
  }
 ]

@@ -75,7 +75,8 @@ def save(entry, raw):
         out.save(path, "JPEG", quality=86, optimize=True)
         return path, out.size
     out = fit_item(img) if kind == "item" else fit_mini(img)
-    out.save(path, "PNG", optimize=True)
+    # WebP с прозрачностью: в 5–8 раз легче PNG при том же виде на телефоне.
+    out.save(path, "WEBP", quality=88, method=6)
     return path, out.size
 
 
@@ -106,7 +107,8 @@ def main():
     failures = []
     for e in chosen:
         try:
-            raw = Path(a.from_file).read_bytes() if a.from_file else generate(e["prompt"], e["kind"], a.model, a.quality)
+            quality = e.get("quality", a.quality)
+            raw = Path(a.from_file).read_bytes() if a.from_file else generate(e["prompt"], e["kind"], a.model, quality)
             (SOURCE / f"{e['key']}.png").write_bytes(raw)
             path, size = save(e, raw)
             print(f"OK   {e['key']:16} {size[0]}x{size[1]} -> {path.relative_to(ROOT)}", flush=True)
